@@ -11,7 +11,7 @@ public interface ExpenseRepository extends CrudRepository<Expense, Long> {
 
     public List<Expense> findByUser(User user);
 
-    public List<Expense> findByUserAndCategory(User user, Category category);
+    public List<Expense> findByUserAndCategory(Long userId, String category);
 
     public List<Expense> findByUserAndDate(User user, Date date);
 
