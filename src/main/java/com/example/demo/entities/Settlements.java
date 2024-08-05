@@ -16,6 +16,7 @@ public class Settlements {
 
     @ManyToOne
     @JoinColumn(name = "group_id")
+    // @JsonIgnore
     private Group group;
 
     @ManyToOne

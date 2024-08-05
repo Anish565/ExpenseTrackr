@@ -3,6 +3,10 @@ package com.example.demo.entities;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +25,7 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    
     private User admin;
 
     @ManyToMany
@@ -32,9 +37,11 @@ public class Group {
     private List<User> users;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Split> splits;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Split> settlements;
 
     // Constructors, getters, and setters

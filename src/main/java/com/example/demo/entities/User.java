@@ -2,6 +2,9 @@ package com.example.demo.entities;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,25 +22,33 @@ public class User{
     private String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Expense> expenses;
 
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Group> createdGroups;
 
     @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Group> groups;
 
     @OneToMany(mappedBy = "payer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Split> paySplits;
 
     @OneToMany(mappedBy = "payee", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Split> receiveSplits;
 
     @OneToMany(mappedBy = "payer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Settlements> paidSettlements;
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Settlements> receivedSettlements;
+    
     // Constructors, setters, and getters
     public User(){}
 

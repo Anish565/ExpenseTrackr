@@ -6,12 +6,13 @@ import com.example.demo.entities.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface ExpenseRepository extends CrudRepository<Expense, Long> {
 
     public List<Expense> findByUser(User user);
 
-    public List<Expense> findByUserAndCategory(Long userId, String category);
+    public List<Expense> findByUserAndCategory(Optional<User> user, Optional<Category> categoryOpt);
 
     public List<Expense> findByUserAndDate(User user, Date date);
 

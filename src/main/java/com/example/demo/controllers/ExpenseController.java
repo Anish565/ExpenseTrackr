@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.service.annotation.PutExchange;
 
 import com.example.demo.entities.*;
@@ -18,6 +20,8 @@ import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
 
+@RestController
+@RequestMapping("/expenses")
 public class ExpenseController {
     
     @Autowired
@@ -32,8 +36,8 @@ public class ExpenseController {
     // Create Expense
     @PostMapping("/{userId}")
     public Expense createExpense(@PathVariable Long userId, @RequestBody Expense expense) {
-        return userRepository.findById(userId)
-                .map(user -> {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        return optionalUser.map(user -> {
                     expense.setUser(user);
                     return expenseRepository.save(expense);
                 })
@@ -49,17 +53,33 @@ public class ExpenseController {
     }
 
     // get specific Expense detail
-    @GetMapping("/{userId}/{expenseId}")
+    @GetMapping("/{userId}/user/{expenseId}")
     public ResponseEntity<Expense> getExpenseById(@PathVariable Long userId, @PathVariable Long expenseId) {
-        Optional<Expense> expense = expenseRepository.findById(expenseId);
-        return expense.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<Expense> expenseOptional = expenseRepository.findById(expenseId);
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent() && expenseOptional.isPresent()) {
+            // get the expense of the user and check if it exists
+            User user = userOptional.get();
+            Expense expense = expenseOptional.get();
+            
+            if (user.getExpenses().contains(expense)) {
+                return ResponseEntity.ok(expense);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     // Update Expense
-    @PutMapping("/{userId}/{expenseId}")
+    @PutMapping("/{userId}/user/{expenseId}")
     public ResponseEntity<Expense> updateExpense(@PathVariable Long userId, @PathVariable Long expenseId, @RequestBody Expense expenseDetails) {
         Optional<Expense> optionalExpense = expenseRepository.findById(expenseId);
+        Optional<User> user = userRepository.findById(userId);
+        System.out.println(optionalExpense);
         if(optionalExpense.isPresent()) {
             Expense expense = optionalExpense.get();
             expense.setAmount(expenseDetails.getAmount());
@@ -74,7 +94,7 @@ public class ExpenseController {
     }
 
     // Delete Expense
-    @DeleteMapping("/{userId}/{expenseId}")
+    @DeleteMapping("/{userId}/user/{expenseId}")
     public ResponseEntity<Void> deleteExpense(@PathVariable Long userId, @PathVariable Long expenseId) {
         Optional<Expense> optionalExpense = expenseRepository.findById(expenseId);
         if(optionalExpense.isPresent()) {
@@ -86,19 +106,19 @@ public class ExpenseController {
     }
 
     // Get Expense by Category
-    @GetMapping("/{userId}/expenses/{category}")
-    public List<Expense> getExpenseByCategory(@PathVariable Long userId, @PathVariable String category) {
+    @GetMapping("/{userId}/{category}")
+    public List<Expense> getExpenseByCategory(@PathVariable Long userId, @PathVariable Long category) {
         // check if user and category exist
         Optional<User> user = userRepository.findById(userId);
         if (!user.isPresent()) {
             throw new IllegalArgumentException("User not found with id " + userId);
         }
 
-        Optional<Category> categoryOpt = categoryRepository.findByName(category);
+        Optional<Category> categoryOpt = categoryRepository.findById(category);
         if (!categoryOpt.isPresent()) {
             throw new IllegalArgumentException("Category not found with name " + category);
         }
-        List<Expense> expenses = expenseRepository.findByUserAndCategory(userId, category);
+        List<Expense> expenses = expenseRepository.findByUserAndCategory(user, categoryOpt);
         return expenses;
 
     }

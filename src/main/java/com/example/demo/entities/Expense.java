@@ -2,6 +2,8 @@ package com.example.demo.entities;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +13,9 @@ import lombok.*;
 @Getter
 public class Expense {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private int amount;
 
     @ManyToOne
@@ -20,6 +24,7 @@ public class Expense {
 
     private String description;
 
+    @Temporal(TemporalType.DATE)
     private Date date;
 
     @ManyToOne

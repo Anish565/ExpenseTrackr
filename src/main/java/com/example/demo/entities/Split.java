@@ -1,5 +1,7 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,10 +17,12 @@ public class Split {
 
     @ManyToOne
     @JoinColumn(name = "group_id")
+    // @JsonIgnore
     private Group group;
 
     @ManyToOne
     @JoinColumn(name = "payee_id")
+    // @JsonIgnore
     private User payee;
 
     @ManyToOne
@@ -27,6 +31,7 @@ public class Split {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    // @JsonIgnore
     private Category category;
 
     private int amount;
