@@ -2,6 +2,8 @@ package com.example.demo.entities;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,25 +18,27 @@ public class Settlements {
 
     @ManyToOne
     @JoinColumn(name = "group_id")
-    // @JsonIgnore
+    @JsonBackReference // child-side of the group-settlement relationship
     private Group group;
 
     @ManyToOne
     @JoinColumn(name = "payer_id")
+    @JsonBackReference // child-side of the user-payer relationship
     private User payer;
 
     @ManyToOne
     @JoinColumn(name = "receiver_id")
+    @JsonBackReference // child-side of the user-receiver relationship
     private User receiver;
 
-    private int amount;
+    private Double amount;
 
     private Date settledDate;
 
     public Settlements() {
     }
 
-    public Settlements(Group group, User payer, User receiver, int amount, Date settledDate) {
+    public Settlements(Group group, User payer, User receiver, Double amount, Date settledDate) {
         this.group = group;
         this.payer = payer;
         this.receiver = receiver;
@@ -74,11 +78,11 @@ public class Settlements {
         this.receiver = receiver;
     }
 
-    public int getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

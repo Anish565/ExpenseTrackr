@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -17,24 +18,25 @@ public class Split {
 
     @ManyToOne
     @JoinColumn(name = "group_id")
-    // @JsonIgnore
+    @JsonBackReference // child-side of the group-split relationship
     private Group group;
 
     @ManyToOne
     @JoinColumn(name = "payee_id")
-    // @JsonIgnore
+    @JsonBackReference // child-side of the user-payee relationship
     private User payee;
 
     @ManyToOne
     @JoinColumn(name = "payer_id")
+    @JsonBackReference // child-side of the user-payer relationship
     private User payer;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    // @JsonIgnore
+    @JsonBackReference // child-side of the category-split relationship
     private Category category;
 
-    private int amount;
+    private Double amount;
 
     private boolean settled;
 
@@ -43,7 +45,7 @@ public class Split {
 
     }
     
-    public Split(Group group, User payee, User payer, Category category, int amount) {  
+    public Split(Group group, User payee, User payer, Category category, Double amount) {  
         this.group = group;
         this.payee = payee;
         this.payer = payer;
@@ -95,11 +97,11 @@ public class Split {
         this.category = category;
     }
 
-    public int getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

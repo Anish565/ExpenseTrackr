@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,11 +19,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.*;
 
+import com.example.demo.DTOs.ExpenseDTO;
+import com.example.demo.DTOs.GroupDTO;
+import com.example.demo.DTOs.SettlementDTO;
+import com.example.demo.DTOs.SplitDTO;
+import com.example.demo.DTOs.UserCompleteDTO;
+import com.example.demo.DTOs.UserDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.SettlementRepository;
 import com.example.demo.repositories.SplitRepository;
 import com.example.demo.repositories.UserRepository;
+import com.example.demo.services.GroupServices;
+import com.example.demo.services.SettlementServices;
+import com.example.demo.services.SplitServices;
+import com.example.demo.services.UserServices;
 
 
 @RestController
@@ -31,6 +42,18 @@ public class UserController {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserServices userServices;
+
+    @Autowired
+    private GroupServices groupServices;
+
+    @Autowired
+    private SettlementServices settlementServices;
+
+    @Autowired
+    private SplitServices splitServices;
 
     @Autowired
     private ExpenseRepository expenseRepository;
@@ -44,50 +67,39 @@ public class UserController {
     // Create User
     @PostMapping(consumes = "application/json")
     public User createUser(User user) {
-        return userRepository.save(user);
+        return userServices.saveUser(user);
     }
 
     // Get User Details
-    @GetMapping(path = "/{userId}", consumes = "application/json")
-    public ResponseEntity<User> getUserById(@PathVariable Long userId) {
-        return userRepository.findById(userId)
-                    .map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping(path = "/{userId}", produces = "application/json")
+    public Optional<UserDTO> getUserById(@PathVariable Long userId) {
+        return userServices.getUserById(userId);
     }
 
     // Update User Details
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/{userId}")
-    public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User userDetails) {
-        
-        return userRepository.findById(userId)
-                    .map(user -> {
-                        user.setUsername(userDetails.getUsername());
-                        user.setEmail(userDetails.getEmail());
-                        user.setPassword(userDetails.getPassword());
-                        return ResponseEntity.ok(userRepository.save(user));
-                    })
-                    .orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping(consumes = "application/json", path = "/{userId}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserCompleteDTO userCompleteDTO) {
+        User updatedUser = userServices.updateUser(userId, userCompleteDTO);
+        UserDTO userDTO = new UserDTO(updatedUser.getId(), updatedUser.getUsername(), updatedUser.getEmail());
+        return ResponseEntity.ok(userDTO);
     }
 
     // Delete User
     // usable to use Void in the return type
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> deleteUser(@PathVariable Long userId) {
-        return userRepository.findById(userId)
-                .map(user -> {
-                    userRepository.delete(user);
-                    return ResponseEntity.noContent().build();
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return userServices.deleteUser(userId);
     }
 
     // get User Expenses
-    @GetMapping("/{userId}/expenses")
-    public ResponseEntity<List<Expense>> getUserExpenses(@PathVariable Long userId) {
+    @GetMapping(path = "/{userId}/expenses", produces = "application/json")
+    public ResponseEntity<List<ExpenseDTO>> getUserExpenses(@PathVariable Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (user.isPresent()) {
-            List<Expense> expenses = expenseRepository.findByUser(user.get());
+            List<ExpenseDTO> expenses = expenseRepository.findByUser(user.get()).stream().map(
+                expense -> new ExpenseDTO(expense.getId(), expense.getAmount(), expense.getDescription(), expense.getDate(), expense.getUser().getId(), expense.getCategory().getName())
+            ).toList();
             return ResponseEntity.ok(expenses);
         } else {
             return ResponseEntity.notFound().build();
@@ -95,12 +107,12 @@ public class UserController {
     }
 
     // get User groups
-    @GetMapping("/{userId}/groups")
-    public ResponseEntity<List<Group>> getUserGroups(@PathVariable Long userId) {
+    @GetMapping(path = "/{userId}/groups", produces = "application/json")
+    public ResponseEntity<List<GroupDTO>> getUserGroups(@PathVariable Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (user.isPresent()) {
-            List<Group> groups = user.get().getGroups();
+            List<GroupDTO> groups = groupServices.findGroupsByUserId(userId);
             return ResponseEntity.ok(groups);
         } else {
             return ResponseEntity.notFound().build();
@@ -108,49 +120,49 @@ public class UserController {
     }
 
     // Get User Settlements
-    @GetMapping("/{userId}/settlements")
-    public ResponseEntity<List<Settlements>> getUserSettlements(@PathVariable Long userId) {
-        return userRepository.findById(userId)
-                .map(user -> ResponseEntity.ok(user.getPaidSettlements()))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping(path = "/{userId}/settlements", produces = "application/json")
+    public ResponseEntity<List<SettlementDTO>> getUserSettlements(@PathVariable Long userId) {
+        List<SettlementDTO> settlements = settlementServices.findSettlementsByUsersId(userId);
+        return ResponseEntity.ok(settlements);
     }
 
     // Get User Splits
-    @GetMapping("/{groupId}/{userId}/splits")
-    public ResponseEntity<List<Split>> getUserSplits(@PathVariable Long groupId, @PathVariable Long userId) {
-        return userRepository.findById(userId)
-                .map(user -> ResponseEntity.ok(user.getPaySplits()))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping(path = "/{userId}/splits", produces = "application/json")
+    public ResponseEntity<List<SplitDTO>> getUserSplits(@PathVariable Long userId) {
+        List<SplitDTO> splits = splitServices.getSplitsByUser(userId);
+        return ResponseEntity.ok(splits);
     }
 
      // Search Users
-    @GetMapping("/search/query={query}")
-    public ResponseEntity<List<User>> searchUsers(@PathVariable String query) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
-        if (users.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping(path = "/search/query={query}", produces = "application/json")
+    public ResponseEntity<List<UserDTO>> searchUsers(@PathVariable String query) {
+        List<UserDTO> users = userServices.searchUsers(query);
         return ResponseEntity.ok(users);
     }
 
     // Get User Balance
-    @GetMapping("/{userId}/balance")
-    public ResponseEntity<Integer> getUserBalance(@PathVariable Long userId) {
+    @GetMapping(path = "/{userId}/balance", produces = "application/json")
+    public ResponseEntity<HashMap<String, Object>> getUserBalance(@PathVariable Long userId) {
         // Implement logic to calculate user balance
-        int balance = calculateUserBalance(userId);
-        return ResponseEntity.ok(balance);
+        Optional<User> user = userRepository.findById(userId);
+        UserDTO userDTO = new UserDTO(user.get().getId(), user.get().getUsername(), user.get().getEmail());
+        HashMap<String, Object> response = new HashMap<>();
+
+        if (user.isPresent()) {
+            Double balance = calculateUserBalance(user.get());
+            response.put("balance", balance);
+            response.put("user", userDTO);
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+        // return the jSON response with user Id and password
     }
 
     // Helper method to calculate user balance
-    private int calculateUserBalance(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-
-        if (user.isPresent()) {
-            List<Expense> expenses = expenseRepository.findByUser(user.get());
-            int balance = expenses.stream().mapToInt(Expense::getAmount).sum();
-            return balance;
-        } else {
-            return 0;
-        }
+    private Double calculateUserBalance(User user) {
+        List<Expense> expenses = expenseRepository.findByUser(user);
+        Double balance = expenses.stream().mapToDouble(Expense::getAmount).sum();
+        return balance;
     }
 }

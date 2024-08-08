@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,36 +20,38 @@ public class User{
     private Long id;
     private String username;
     private String email;
+
+    @JsonIgnore
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // Parent side of user-expense relationship
     private List<Expense> expenses;
 
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // parent side of user-createdGroups relationship
     private List<Group> createdGroups;
 
     @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore // Avoid cyclic references
     private List<Group> groups;
 
     @OneToMany(mappedBy = "payer", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore // Avoid cyclic references
     private List<Split> paySplits;
 
     @OneToMany(mappedBy = "payee", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore // Avoid cyclic references
     private List<Split> receiveSplits;
 
     @OneToMany(mappedBy = "payer", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore // Avoid cyclic references
     private List<Settlements> paidSettlements;
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore // Avoid cyclic references
     private List<Settlements> receivedSettlements;
-    
+
     // Constructors, setters, and getters
     public User(){}
 

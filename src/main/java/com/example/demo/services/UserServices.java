@@ -1,35 +1,106 @@
 package com.example.demo.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+// import org.springframework.security.core.userdetails.UserDetails;
+// import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Service;
 
+import com.example.demo.DTOs.UserDTO;
+import com.example.demo.DTOs.UserCompleteDTO;
 import com.example.demo.entities.*;
+import com.example.demo.exceptions.UsernameNotFoundException;
 import com.example.demo.repositories.*;
 
-public class UserServices {
+
+
+@Service
+public class UserServices{
     
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> findAllusers() {
-        List<User> users = (List<User>)userRepository.findAll();
+    // Get all users
+    public List<UserDTO> findAllusers() {
+        List<UserDTO> users = userRepository.findAll().stream().map(
+            user -> new UserDTO(user.getId(), user.getUsername(), user.getEmail())
+        ).collect(Collectors.toList());
         return users;
     }
-
-    public Optional<User> findUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return user;
+    
+    
+    // Get user by id
+    public Optional<UserDTO> getUserById(Long id) {
+        Optional<UserDTO> userInfo = userRepository.findById(id).map(
+            user -> new UserDTO(user.getId(), user.getUsername(), user.getEmail())
+        );
+        return userInfo;
     }
 
+
+    // update user
+    public User updateUser(Long id, UserCompleteDTO userCompleteDTO) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setUsername(userCompleteDTO.username());
+        user.setEmail(userCompleteDTO.email());
+        user.setPassword(userCompleteDTO.password());
+        return userRepository.save(user);
+    }
+    // Get User complete details
+    public Optional<UserCompleteDTO> getUserCompleteById(Long id) {
+        Optional<UserCompleteDTO> userInfo = userRepository.findById(id).map(
+            user -> new UserCompleteDTO(user.getId(), user.getUsername(), user.getEmail(), user.getPassword())
+        );
+        return userInfo;
+    }
+
+    // Get User by username
+    public Optional<UserCompleteDTO> getUserCompleteByUsername(String username) {
+        Optional<UserCompleteDTO> userInfo = userRepository.findByUsername(username).map(
+            user -> new UserCompleteDTO(user.getId(), user.getUsername(), user.getEmail(), user.getPassword())
+        );
+        return userInfo;
+    }
+
+
+    
+    // Save User
     public User saveUser(User user) {
         return userRepository.save(user);
     }
 
-    public void deleteUser(User user) {
-        userRepository.delete(user);
+    // Delete User by id
+    public ResponseEntity<Object> deleteUser(long id) {
+        userRepository.deleteById(id);
+        return null;
     }
+
+
+    // search users 
+    public List<UserDTO> searchUsers(String query) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
+        if (users.isEmpty()) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        return users.stream().map(
+            user -> new UserDTO(user.getId(), user.getUsername(), user.getEmail())
+        ).collect(Collectors.toList());
+    }
+
+    // @Override
+    // public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    //     Optional<User> user = userRepository.findByUsername(username);
+    //     if (user == null) {
+    //         throw new UsernameNotFoundException("User not found");
+    //     }
+
+    //     return new org.springframework.security.core.userdetails.User(user.get().getUsername(), user.get().getPassword(), new ArrayList<>());
+    // }
 
 
 

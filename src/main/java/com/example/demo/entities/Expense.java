@@ -2,6 +2,7 @@ package com.example.demo.entities;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -16,25 +17,29 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int amount;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
-
+    private Double amount;
     private String description;
 
     @Temporal(TemporalType.DATE)
     private Date date;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonBackReference // child-side of the user-expense relationship
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    @JsonBackReference // child-side of the category-expense relationship
+    private Category category;
+
+
+
 
     public Expense() {
     }
 
-    public Expense(int amount, Category category, String description, Date date, User user) {
+    public Expense(Double amount, Category category, String description, Date date, User user) {
         this.amount = amount;
         this.category = category;
         this.description = description;
@@ -50,11 +55,11 @@ public class Expense {
         this.id = id;
     }
 
-    public int getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

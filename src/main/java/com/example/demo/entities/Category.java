@@ -3,6 +3,7 @@ package com.example.demo.entities;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,12 +19,12 @@ public class Category {
 
     private String name;
 
-    @OneToMany(mappedBy="category", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy="category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // parent side of category-expense relationship
     private List<Expense> expenses;
 
-    @OneToMany(mappedBy="category", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy="category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // parent side of category-split relationship
     private List<Split> splits;
 
 

@@ -1,6 +1,9 @@
 package com.example.demo.controllers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.service.annotation.PutExchange;
 
+import com.example.demo.DTOs.CategoryExpenseDTO;
+import com.example.demo.DTOs.ExpenseDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
+import com.example.demo.services.ExpenseServices;
+import com.example.demo.services.UserServices;
 
 @RestController
 @RequestMapping("/expenses")
@@ -28,86 +35,69 @@ public class ExpenseController {
     private ExpenseRepository expenseRepository;
 
     @Autowired
+    private ExpenseServices expenseServices;
+
+
+    @Autowired
+    private UserServices userServices;
+
+    @Autowired
     private CategoryRepository categoryRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     // Create Expense
-    @PostMapping("/{userId}")
-    public Expense createExpense(@PathVariable Long userId, @RequestBody Expense expense) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        return optionalUser.map(user -> {
-                    expense.setUser(user);
-                    return expenseRepository.save(expense);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
+    @PostMapping("/{userId}/{categoryId}")
+    public ResponseEntity<ExpenseDTO> createExpense(@PathVariable Long userId, @RequestBody ExpenseDTO expense, @PathVariable Long categoryId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
+        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new IllegalArgumentException("Category not found with id " + categoryId));
+        Expense newExpense = new Expense();
+        newExpense.setAmount(expense.amount());
+        newExpense.setDescription(expense.description());
+        newExpense.setDate(expense.date());
+        newExpense.setUser(user);
+        newExpense.setCategory(category);
+        expenseRepository.save(newExpense);
+        ExpenseDTO expenseDTO = new ExpenseDTO(newExpense.getId(), newExpense.getAmount(), newExpense.getDescription(), newExpense.getDate(), newExpense.getUser().getId(), newExpense.getCategory().getName());
+        return ResponseEntity.ok(expenseDTO);
     }
 
     // Get All Expenses
-    @GetMapping("/{userId}")
-    public List<Expense> getAllExpenses(@PathVariable Long userId) {
-        return userRepository.findById(userId)
-                .map(user -> user.getExpenses())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
+    @GetMapping("/{userId}/all")
+    public ResponseEntity<List<ExpenseDTO>> getAllExpenses(@PathVariable Long userId) {
+        List<ExpenseDTO> expenses = expenseServices.findExpensesByUserId(userId);
+        return ResponseEntity.ok(expenses);
     }
 
     // get specific Expense detail
-    @GetMapping("/{userId}/user/{expenseId}")
-    public ResponseEntity<Expense> getExpenseById(@PathVariable Long userId, @PathVariable Long expenseId) {
-        Optional<Expense> expenseOptional = expenseRepository.findById(expenseId);
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isPresent() && expenseOptional.isPresent()) {
-            // get the expense of the user and check if it exists
-            User user = userOptional.get();
-            Expense expense = expenseOptional.get();
-            
-            if (user.getExpenses().contains(expense)) {
-                return ResponseEntity.ok(expense);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } else {
+    @GetMapping("/{expenseId}")
+    public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable Long expenseId) {
+        Optional<ExpenseDTO> optionalExpense = expenseServices.findExpenseById(expenseId);
+        if(optionalExpense.isPresent()) {
+            return ResponseEntity.ok(optionalExpense.get());
+        } else{
             return ResponseEntity.notFound().build();
         }
-
     }
 
     // Update Expense
     @PutMapping("/{userId}/user/{expenseId}")
-    public ResponseEntity<Expense> updateExpense(@PathVariable Long userId, @PathVariable Long expenseId, @RequestBody Expense expenseDetails) {
-        Optional<Expense> optionalExpense = expenseRepository.findById(expenseId);
-        Optional<User> user = userRepository.findById(userId);
-        System.out.println(optionalExpense);
-        if(optionalExpense.isPresent()) {
-            Expense expense = optionalExpense.get();
-            expense.setAmount(expenseDetails.getAmount());
-            expense.setCategory(expenseDetails.getCategory());
-            expense.setDescription(expenseDetails.getDescription());
-            expense.setDate(expenseDetails.getDate());
-            final Expense updatedExpense = expenseRepository.save(expense);
-            return ResponseEntity.ok(updatedExpense);
-        } else{
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ExpenseDTO> updateExpense(@PathVariable Long userId, @PathVariable Long expenseId, @RequestBody ExpenseDTO expenseDetails) {
+        Expense updatedExpense = expenseServices.updateExpense(expenseId, expenseDetails);
+        ExpenseDTO expenseDTO = new ExpenseDTO(updatedExpense.getId(), updatedExpense.getAmount(), updatedExpense.getDescription(), updatedExpense.getDate(), updatedExpense.getUser().getId(), updatedExpense.getCategory().getName());
+        return ResponseEntity.ok(expenseDTO);
     }
 
     // Delete Expense
     @DeleteMapping("/{userId}/user/{expenseId}")
-    public ResponseEntity<Void> deleteExpense(@PathVariable Long userId, @PathVariable Long expenseId) {
-        Optional<Expense> optionalExpense = expenseRepository.findById(expenseId);
-        if(optionalExpense.isPresent()) {
-            expenseRepository.delete(optionalExpense.get());
-            return ResponseEntity.noContent().build();
-        } else{
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Object> deleteExpense(@PathVariable Long userId, @PathVariable Long expenseId) {
+        return expenseServices.deleteExpense(expenseId);
     }
 
-    // Get Expense by Category
+    // Get Expenses by Category
     @GetMapping("/{userId}/{category}")
-    public List<Expense> getExpenseByCategory(@PathVariable Long userId, @PathVariable Long category) {
+    public ResponseEntity<List<ExpenseDTO>> getExpenseByCategory(@PathVariable Long userId, @PathVariable Long category) {
         // check if user and category exist
         Optional<User> user = userRepository.findById(userId);
         if (!user.isPresent()) {
@@ -118,8 +108,16 @@ public class ExpenseController {
         if (!categoryOpt.isPresent()) {
             throw new IllegalArgumentException("Category not found with name " + category);
         }
-        List<Expense> expenses = expenseRepository.findByUserAndCategory(user, categoryOpt);
-        return expenses;
+        List<ExpenseDTO> expenses = expenseServices.findExpensesByCategoryAndUser(categoryOpt.get(), user.get());
+        return ResponseEntity.ok(expenses);
 
+    }
+
+    // Get total expenses per category for a user
+    @GetMapping("/{userId}/category-total")
+    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategory(@PathVariable Long userId) {
+        List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
+        return ResponseEntity.ok(expenses);
+        
     }
 }

@@ -3,6 +3,7 @@ package com.example.demo.entities;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,29 +21,29 @@ public class Group {
     private Long id;
 
     private String name;
-
     private Date date;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    
+    @JsonBackReference // child side of user-createdGroups relationship
     private User admin;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "group_users",
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @JsonManagedReference // parent side of group-users relationship
     private List<User> users;
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // parent side of group-splits relationship
     private List<Split> splits;
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Split> settlements;
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // parent side of group-settlements relationship
+    private List<Settlements> settlements;
 
     // Constructors, getters, and setters
 
@@ -109,6 +110,24 @@ public class Group {
     }
 
 
+    public List<Split> getSplits() {
+        return splits;
+    }
+
+
+    public void setSplits(List<Split> splits) {
+        this.splits = splits;
+    }
+
+
+    public List<Settlements> getSettlements() {
+        return settlements;
+    }
+
+
+    public void setSettlements(List<Settlements> settlements) {
+        this.settlements = settlements;
+    }
     // Additional methods
 
     @Override

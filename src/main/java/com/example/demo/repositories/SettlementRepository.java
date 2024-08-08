@@ -11,7 +11,11 @@ public interface SettlementRepository extends CrudRepository<Settlements, Long> 
 
     public List<Settlements> findByGroup(Group group);
 
+    public List<Settlements>findAll();
 
+    public List<Settlements> findByGroupId(long id);
+
+    // public List<Settlements> findByPayerIdOrReceiverId(Long id, Long id2);
 
     public List<Settlements> findByReceiver(User receiver);
 

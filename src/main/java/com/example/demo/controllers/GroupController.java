@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,11 +15,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.DTOs.GroupDTO;
+import com.example.demo.DTOs.SettlementDTO;
+import com.example.demo.DTOs.SplitDTO;
+import com.example.demo.DTOs.UserDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.GroupRepository;
 import com.example.demo.repositories.SettlementRepository;
 import com.example.demo.repositories.SplitRepository;
 import com.example.demo.repositories.UserRepository;
+import com.example.demo.services.GroupServices;
 
 @RestController
 @RequestMapping("/groups")
@@ -26,6 +32,9 @@ public class GroupController {
     
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private GroupServices groupServices;
 
     @Autowired
     private UserRepository userRepository;
@@ -36,102 +45,82 @@ public class GroupController {
     @Autowired
     private SettlementRepository settlementRepository;
 
+    
     // Create Group
-    @PostMapping
-    public Group createGroup(@RequestBody Group group) {
-        return groupRepository.save(group);
+    @PostMapping(path = "/{userId}", consumes = "application/json")
+    public ResponseEntity<GroupDTO> createGroup(@PathVariable Long userId, @RequestBody GroupDTO group) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        List<User> userList = new ArrayList<>();
+        userList.add(user);
+        Group newGroup = new Group();
+        newGroup.setName(group.name());
+        newGroup.setDate(group.date());
+        newGroup.setAdmin(user);
+        newGroup.setUsers(userList);
+        groupServices.saveGroup(newGroup);
+        GroupDTO newGroupDTO = new GroupDTO(newGroup.getId(), newGroup.getName(), newGroup.getDate(), newGroup.getAdmin().getId());
+        return ResponseEntity.ok(newGroupDTO);
+    
     }
 
     // Get Group Details
-    @GetMapping("/{groupId}")
-    public ResponseEntity<Group> getGroupById(@PathVariable Long groupId) {
-        Optional<Group> group = groupRepository.findById(groupId);
+    @GetMapping(path = "/{groupId}", produces = "application/json")
+    public ResponseEntity<GroupDTO> getGroupById(@PathVariable Long groupId) {
+        Optional<GroupDTO> group = groupServices.findGroupById(groupId);
         return group.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Update Group Details
     @PutMapping("/{groupId}")
-    public ResponseEntity<Group> updateGroup(@PathVariable Long groupId, @RequestBody Group groupDetails) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        if (group.isPresent()){
-            Group group1 = group.get();
-            group1.setName(groupDetails.getName());
-            group1.setDate(groupDetails.getDate());
-            group1.setUsers(groupDetails.getUsers());
-            final Group updatedGroup = groupRepository.save(group1);
-            return ResponseEntity.ok(updatedGroup);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDetails) {
+        Group updatedGroup = groupServices.updateGroup(groupId, groupDetails);
+        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId());
+        return ResponseEntity.ok(groupDTO);
     }
 
     // Delete Group
     @DeleteMapping("/{groupId}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable Long groupId) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        if (group.isPresent()){
-            groupRepository.delete(group.get());
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Object> deleteGroup(@PathVariable Long groupId) {
+        return groupServices.deleteGroup(groupId);
     }
 
     // Add User to Group
     @PostMapping("/{groupId}/users/{userId}")
-    public ResponseEntity<Group> addUserToGroup(@PathVariable long groupId, @PathVariable long userId) {
-        Optional<Group> optionalGroup = groupRepository.findById(groupId);
-        Optional<User> optionalUser = userRepository.findById(userId);
-
-        if (optionalGroup.isPresent() && optionalUser.isPresent()) {
-            Group group = optionalGroup.get();
-            User user = optionalUser.get();
-            group.getUsers().add(user);
-            final Group updatedGroup = groupRepository.save(group);
-            return ResponseEntity.ok(updatedGroup);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<GroupDTO> addUserToGroup(@PathVariable long groupId, @PathVariable long userId) {
+        Group newUser = groupServices.addUserToGroup(groupId, userId);
+        GroupDTO newGroupDTO = new GroupDTO(newUser.getId(), newUser.getName(), newUser.getDate(), newUser.getAdmin().getId());
+        return ResponseEntity.ok(newGroupDTO);
 
     }
 
     // Remove User from Group
     @DeleteMapping("/{groupId}/users/{userId}")
-    public ResponseEntity<Group> removeUserFromGroup(@PathVariable long groupId, @PathVariable long userId) {
-        Optional<Group> optionalGroup = groupRepository.findById(groupId);
-        Optional<User> optionalUser = userRepository.findById(userId);
-
-        if (optionalGroup.isPresent() && optionalUser.isPresent()) {
-            Group group = optionalGroup.get();
-            User user = optionalUser.get();
-            group.getUsers().remove(user);
-            final Group updatedGroup = groupRepository.save(group);
-            return ResponseEntity.ok(updatedGroup);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<GroupDTO> removeUserFromGroup(@PathVariable long groupId, @PathVariable long userId) {
+        Group updatedGroup = groupServices.removeUserFromGroup(groupId, userId);
+        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId());
+        return ResponseEntity.ok(groupDTO);
     }
 
     // Get Group Users
     @GetMapping("/{groupId}/users")
-    public ResponseEntity<List<User>> getGroupUsers(@PathVariable Long groupId) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        return group.map(g -> ResponseEntity.ok(g.getUsers())).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<List<UserDTO>> getGroupUsers(@PathVariable Long groupId) {
+        List<UserDTO> users = groupServices.getGroupUsers(groupId);
+        return ResponseEntity.ok(users);
     }
 
     // Get Group Splits
     @GetMapping("/{groupId}/splits")
-    public ResponseEntity<List<Split>> getGroupSplits(@PathVariable Long groupId) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        return group.map(g -> ResponseEntity.ok(g.getSplits())).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<List<SplitDTO>> getGroupSplits(@PathVariable Long groupId) {
+        List<SplitDTO> splits = groupServices.getGroupSplits(groupId);
+        return ResponseEntity.ok(splits);
     }
 
     // Get Group Settlements
-    // @GetMapping("/{groupId}/settlements")
-    // public ResponseEntity<List<Settlements>> getGroupSettlements(@PathVariable Long groupId) {
-    //     Optional<Group> group = groupRepository.findById(groupId);
-    //     return group.map(g -> ResponseEntity.ok(g.getSettlements())).orElseGet(() -> ResponseEntity.notFound().build());
-    // }
+    @GetMapping("/{groupId}/settlements")
+    public ResponseEntity<List<SettlementDTO>> getGroupSettlements(@PathVariable Long groupId) {
+        List<SettlementDTO> settlements = groupServices.getGroupSettlements(groupId);
+        return ResponseEntity.ok(settlements);
+    }
 
 }
 
