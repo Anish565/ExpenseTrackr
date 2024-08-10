@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.swing.SwingUtilities;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.service.annotation.PutExchange;
 import com.example.demo.DTOs.CategoryExpenseDTO;
 import com.example.demo.DTOs.ExpenseDTO;
 import com.example.demo.entities.*;
+import com.example.demo.graphs.BarGraphTotal;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
@@ -117,6 +120,8 @@ public class ExpenseController {
     @GetMapping("/{userId}/category-total")
     public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategory(@PathVariable Long userId) {
         List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
+        BarGraphTotal barGraphTotal = new BarGraphTotal(expenses);
+        SwingUtilities.invokeLater(() -> barGraphTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/BarGraphTotal.png"));
         return ResponseEntity.ok(expenses);
         
     }
