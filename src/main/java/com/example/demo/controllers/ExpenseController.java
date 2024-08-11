@@ -25,6 +25,7 @@ import com.example.demo.DTOs.CategoryExpenseDTO;
 import com.example.demo.DTOs.ExpenseDTO;
 import com.example.demo.entities.*;
 import com.example.demo.graphs.BarGraphTotal;
+import com.example.demo.graphs.PieChartTotal;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
@@ -139,14 +140,23 @@ public class ExpenseController {
     }
 
     // Get total expenses per category for a user
-    @GetMapping("/category-total")
-    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategory() {
+    @GetMapping("/category-total/bar-graph")
+    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategoryBar() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
-        BarGraphTotal barGraphTotal = new BarGraphTotal(expenses);
+        BarGraphTotal barGraphTotal = new BarGraphTotal();
         SwingUtilities.invokeLater(() -> barGraphTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/BarGraphTotal.png"));
         return ResponseEntity.ok(expenses);
-        
+    }
+
+    @GetMapping("/category-total/pie-chart")
+    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategoryPie() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
+        PieChartTotal pieChartTotal = new PieChartTotal();
+        SwingUtilities.invokeLater(() -> pieChartTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/PieChartTotal.png"));
+        return ResponseEntity.ok(expenses);
     }
 }

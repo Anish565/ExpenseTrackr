@@ -112,6 +112,9 @@ public class GroupController {
     public ResponseEntity<GroupDTO> addUserToGroup(@PathVariable long groupId, @PathVariable long userId) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long adminId = ((User) principal).getId();
+        if (groupRepository.findById(groupId).get().getUsers().contains(userRepository.findById(userId).get())) {
+            return ResponseEntity.status(400).build();
+        }
         if (groupRepository.findById(groupId).get().getAdmin().getId() != adminId) {
             return ResponseEntity.status(401).build();
         }
