@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -71,14 +72,18 @@ public class UserController {
     }
 
     // Get User Details
-    @GetMapping(path = "/{userId}", produces = "application/json")
-    public Optional<UserDTO> getUserById(@PathVariable Long userId) {
+    @GetMapping(path = "/me", produces = "application/json")
+    public Optional<UserDTO> getUserById() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         return userServices.getUserById(userId);
     }
 
     // Update User Details
-    @PutMapping(consumes = "application/json", path = "/{userId}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserCompleteDTO userCompleteDTO) {
+    @PutMapping(consumes = "application/json", path = "/me")
+    public ResponseEntity<UserDTO> updateUser(@RequestBody UserCompleteDTO userCompleteDTO) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         User updatedUser = userServices.updateUser(userId, userCompleteDTO);
         UserDTO userDTO = new UserDTO(updatedUser.getId(), updatedUser.getUsername(), updatedUser.getEmail());
         return ResponseEntity.ok(userDTO);
@@ -92,8 +97,10 @@ public class UserController {
     }
 
     // get User Expenses
-    @GetMapping(path = "/{userId}/expenses", produces = "application/json")
-    public ResponseEntity<List<ExpenseDTO>> getUserExpenses(@PathVariable Long userId) {
+    @GetMapping(path = "/expenses/me", produces = "application/json")
+    public ResponseEntity<List<ExpenseDTO>> getUserExpenses() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         Optional<User> user = userRepository.findById(userId);
 
         if (user.isPresent()) {
@@ -107,8 +114,10 @@ public class UserController {
     }
 
     // get User groups
-    @GetMapping(path = "/{userId}/groups", produces = "application/json")
-    public ResponseEntity<List<GroupDTO>> getUserGroups(@PathVariable Long userId) {
+    @GetMapping(path = "/groups/me", produces = "application/json")
+    public ResponseEntity<List<GroupDTO>> getUserGroups() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         Optional<User> user = userRepository.findById(userId);
 
         if (user.isPresent()) {
@@ -120,15 +129,19 @@ public class UserController {
     }
 
     // Get User Settlements
-    @GetMapping(path = "/{userId}/settlements", produces = "application/json")
-    public ResponseEntity<List<SettlementDTO>> getUserSettlements(@PathVariable Long userId) {
+    @GetMapping(path = "/settlements/me", produces = "application/json")
+    public ResponseEntity<List<SettlementDTO>> getUserSettlements() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         List<SettlementDTO> settlements = settlementServices.findSettlementsByUsersId(userId);
         return ResponseEntity.ok(settlements);
     }
 
     // Get User Splits
-    @GetMapping(path = "/{userId}/splits", produces = "application/json")
-    public ResponseEntity<List<SplitDTO>> getUserSplits(@PathVariable Long userId) {
+    @GetMapping(path = "/splits/me", produces = "application/json")
+    public ResponseEntity<List<SplitDTO>> getUserSplits() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         List<SplitDTO> splits = splitServices.getSplitsByUser(userId);
         return ResponseEntity.ok(splits);
     }
@@ -141,8 +154,10 @@ public class UserController {
     }
 
     // Get User Balance
-    @GetMapping(path = "/{userId}/balance", produces = "application/json")
-    public ResponseEntity<HashMap<String, Object>> getUserBalance(@PathVariable Long userId) {
+    @GetMapping(path = "/balance/me", produces = "application/json")
+    public ResponseEntity<HashMap<String, Object>> getUserBalance() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         // Implement logic to calculate user balance
         Optional<User> user = userRepository.findById(userId);
         UserDTO userDTO = new UserDTO(user.get().getId(), user.get().getUsername(), user.get().getEmail());

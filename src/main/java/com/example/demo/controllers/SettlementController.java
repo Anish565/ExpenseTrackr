@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +40,12 @@ public class SettlementController {
     // Create Settlement
     @PostMapping
     public ResponseEntity<SettlementDTO> createSettlement(@RequestBody SettlementDTO settlement) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        // only the payer and the receiver can initiate a settlement. 
+        if (settlement.payerId() != userId || settlement.receiverId() != userId) {
+            return ResponseEntity.status(401).build();
+        }
         Optional<Group> group = groupRepository.findById(settlement.groupId());
         if (group.isPresent()) {
             Optional<User> payer = userRepository.findById(settlement.payerId());
@@ -75,21 +82,47 @@ public class SettlementController {
     // Get Settlement Details
     @GetMapping("/{settlementId}")
     public ResponseEntity<SettlementDTO> getSettlementById(@PathVariable Long settlementId) {
-        Optional<SettlementDTO> settlement = settlementsServices.findSettlementsById(settlementId);
-        return settlement.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Optional<Settlements> settlement = settlementsRepository.findById(settlementId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Group group = groupRepository.findById(settlement.get().getGroup().getId()).orElseThrow(() -> new RuntimeException("Group not found"));
+        
+        if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
 
+        SettlementDTO settlementDTO = new SettlementDTO(
+            settlement.get().getId(),
+            settlement.get().getAmount(),
+            settlement.get().getSettledDate(),
+            settlement.get().getGroup().getId(),
+            settlement.get().getPayer().getId(),
+            settlement.get().getReceiver().getId()
+        );
+        return ResponseEntity.ok(settlementDTO);
+    }
+    
     // Get Settlements by Group
     @GetMapping("/groups/{groupId}")
     public ResponseEntity<List<SettlementDTO>> getSettlementsByGroup(@PathVariable Long groupId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Optional<Group> group = groupRepository.findById(groupId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
         List<SettlementDTO> settlements = settlementsServices.findSettlementsByGroupId(groupId);
         return ResponseEntity.ok(settlements);
         
     }
 
     // Get Settlements by User
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<SettlementDTO>> getSettlementsByUser(@PathVariable Long userId) {
+    @GetMapping("/user")
+    public ResponseEntity<List<SettlementDTO>> getSettlementsByUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         List<SettlementDTO> settlements = settlementsServices.findSettlementsByUsersId(userId);
         return ResponseEntity.ok(settlements);
     }

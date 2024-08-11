@@ -7,7 +7,8 @@ public record SplitDTO(
     long payerId,
     long payeeId,
     String categoryName,
-    Boolean settled
+    Boolean settled,
+    String status
 
 ) {
 

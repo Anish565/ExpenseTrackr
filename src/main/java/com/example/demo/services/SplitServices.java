@@ -40,7 +40,8 @@ public class SplitServices {
                 split.getPayer().getId(),
                 split.getPayee().getId(),
                 split.getCategory().getName(),
-                split.isSettled()
+                split.isSettled(),
+                ""
             )
         ).toList();
         return splits;
@@ -56,7 +57,8 @@ public class SplitServices {
                 split.getPayer().getId(),
                 split.getPayee().getId(),
                 split.getCategory().getName(),
-                split.isSettled()
+                split.isSettled(),
+                ""
             )
         );
         return splitFound;
@@ -73,7 +75,8 @@ public class SplitServices {
                 split.getPayer().getId(),
                 split.getPayee().getId(),
                 split.getCategory().getName(),
-                split.isSettled()
+                split.isSettled(),
+                ""
             )
         ).toList();
         return splits;
@@ -89,7 +92,8 @@ public class SplitServices {
                 split.getPayer().getId(),
                 split.getPayee().getId(),
                 split.getCategory().getName(),
-                split.isSettled()
+                split.isSettled(),
+                ""
             )
         ).toList();
         return splits;

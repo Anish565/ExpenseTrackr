@@ -125,6 +125,7 @@ public class GroupServices {
     public List<SplitDTO> getGroupSplits(Long groupId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
         List<SplitDTO> splits = group.getSplits().stream().map(
+            
             split -> new SplitDTO(
                 split.getId(),
                 split.getAmount(),
@@ -132,7 +133,8 @@ public class GroupServices {
                 split.getPayer().getId(),
                 split.getPayee().getId(),
                 split.getCategory().getName(),
-                split.isSettled()
+                split.isSettled(),
+                ""
             )
         ).toList();
         return splits;

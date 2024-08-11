@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +44,13 @@ public class SplitController {
     // Create a split
     @PostMapping("{groupId}")
     public ResponseEntity<SplitDTO> createSplit(@PathVariable Long groupId, @RequestBody SplitDTO splitDetails){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
         User payee = userRepository.findById(splitDetails.payeeId()).orElseThrow(() -> new RuntimeException("Payee not found"));
         User payer = userRepository.findById(splitDetails.payerId()).orElseThrow(() -> new RuntimeException("Payer not found"));
         Category category = categoryRepository.findByName(splitDetails.categoryName()).orElseThrow(() -> new RuntimeException("Category not found"));
@@ -55,41 +62,83 @@ public class SplitController {
         split.setAmount(splitDetails.amount());
         split.setSettled(false);
         splitServices.saveSplit(split);
-        SplitDTO splitDTO = new SplitDTO(split.getId(), split.getAmount(), split.getGroup().getId(), split.getPayer().getId(), split.getPayee().getId(), split.getCategory().getName(), split.isSettled());
+        SplitDTO splitDTO = new SplitDTO(split.getId(), split.getAmount(), split.getGroup().getId(), split.getPayer().getId(), split.getPayee().getId(), split.getCategory().getName(), split.isSettled(), "");
         return ResponseEntity.ok(splitDTO);
     }
 
     // Get Split Details
     @GetMapping("/{splitId}")
-    public ResponseEntity<Optional<SplitDTO>> getSplitById(@PathVariable Long splitId){
-        Optional<SplitDTO> split = splitServices.findSplitById(splitId);
-        return ResponseEntity.ok(split);
+    public ResponseEntity<SplitDTO> getSplitById(@PathVariable Long splitId){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        String message = "";
+
+        if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (split.getPayer().getId() != userId && split.getPayee().getId() != userId) {
+            message = "You are not involved";
+        }
+
+        Split splitFound = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
+        
+        SplitDTO splitDTO = new SplitDTO(splitFound.getId(), splitFound.getAmount(), splitFound.getGroup().getId(), splitFound.getPayer().getId(), splitFound.getPayee().getId(), splitFound.getCategory().getName(), splitFound.isSettled(), message);
+        
+        return ResponseEntity.ok(splitDTO);
     }
  
     // Update Split Details
     @PutMapping("/{splitId}")
     public ResponseEntity<SplitDTO> updateSplit(@PathVariable Long splitId, @RequestBody SplitDTO splitDetails){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
+        User user  = userRepository.findById(splitDetails.payerId()).orElseThrow(() -> new RuntimeException("User not found"));
+        if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
         Split updatedSplit = splitServices.updateSplit(splitId, splitDetails);
-        SplitDTO splitDTO = new SplitDTO(updatedSplit.getId(), updatedSplit.getAmount(), updatedSplit.getGroup().getId(), updatedSplit.getPayer().getId(), updatedSplit.getPayee().getId(), updatedSplit.getCategory().getName(), updatedSplit.isSettled());
+        SplitDTO splitDTO = new SplitDTO(updatedSplit.getId(), updatedSplit.getAmount(), updatedSplit.getGroup().getId(), updatedSplit.getPayer().getId(), updatedSplit.getPayee().getId(), updatedSplit.getCategory().getName(), updatedSplit.isSettled(), "");
         return ResponseEntity.ok(splitDTO);
     }
 
     // Delete Split
     @DeleteMapping("/{splitId}")
     public Object deleteSplit(@PathVariable Long splitId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
+        User user  = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
+            return ResponseEntity.status(401).build();
+        }
         return splitServices.deleteSplit(splitId);
     }
 
      // Get Splits by User
-     @GetMapping("/user/{userId}")
-     public ResponseEntity<List<SplitDTO>> getSplitsByUser(@PathVariable Long userId) {
-         List<SplitDTO> splits = splitServices.getSplitsByUser(userId);
+     @GetMapping("/me")
+     public ResponseEntity<List<SplitDTO>> getSplitsByUser() {
+         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+         Long adminId = ((User) principal).getId();
+        //  User user = userRepository.findById(adminId).orElseThrow(() -> new RuntimeException("User not found"));
+         List<SplitDTO> splits = splitServices.getSplitsByUser(adminId);
+
          return ResponseEntity.ok(splits);
      }
  
      // Get Splits by Group
      @GetMapping("/group/{groupId}")
      public ResponseEntity<List<SplitDTO>> getSplitsByGroup(@PathVariable Long groupId) {
+         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+         Long userId = ((User) principal).getId();
+         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
+         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+         if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+             return ResponseEntity.status(401).build();
+         }
          List<SplitDTO> splits = splitServices.getSplitsByGroup(groupId);
          return ResponseEntity.ok(splits);
      }

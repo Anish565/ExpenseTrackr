@@ -10,6 +10,7 @@ import javax.swing.SwingUtilities;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,8 +52,10 @@ public class ExpenseController {
     private UserRepository userRepository;
 
     // Create Expense
-    @PostMapping("/{userId}/{categoryId}")
-    public ResponseEntity<ExpenseDTO> createExpense(@PathVariable Long userId, @RequestBody ExpenseDTO expense, @PathVariable Long categoryId) {
+    @PostMapping("/{categoryId}")
+    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody ExpenseDTO expense, @PathVariable Long categoryId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new IllegalArgumentException("Category not found with id " + categoryId));
         Expense newExpense = new Expense();
@@ -67,8 +70,10 @@ public class ExpenseController {
     }
 
     // Get All Expenses
-    @GetMapping("/{userId}/all")
-    public ResponseEntity<List<ExpenseDTO>> getAllExpenses(@PathVariable Long userId) {
+    @GetMapping("/all")
+    public ResponseEntity<List<ExpenseDTO>> getAllExpenses() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         List<ExpenseDTO> expenses = expenseServices.findExpensesByUserId(userId);
         return ResponseEntity.ok(expenses);
     }
@@ -76,8 +81,10 @@ public class ExpenseController {
     // get specific Expense detail
     @GetMapping("/{expenseId}")
     public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable Long expenseId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         Optional<ExpenseDTO> optionalExpense = expenseServices.findExpenseById(expenseId);
-        if(optionalExpense.isPresent()) {
+        if (optionalExpense.get().userId() == userId && optionalExpense.isPresent()) {
             return ResponseEntity.ok(optionalExpense.get());
         } else{
             return ResponseEntity.notFound().build();
@@ -85,22 +92,37 @@ public class ExpenseController {
     }
 
     // Update Expense
-    @PutMapping("/{userId}/user/{expenseId}")
-    public ResponseEntity<ExpenseDTO> updateExpense(@PathVariable Long userId, @PathVariable Long expenseId, @RequestBody ExpenseDTO expenseDetails) {
+    @PutMapping("/{expenseId}")
+    public ResponseEntity<ExpenseDTO> updateExpense(@PathVariable Long expenseId, @RequestBody ExpenseDTO expenseDetails) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new IllegalArgumentException("Expense not found with id " + expenseId));
+        if (expense.getUser().getId() != userId) {
+            return ResponseEntity.status(401).build();
+        }
         Expense updatedExpense = expenseServices.updateExpense(expenseId, expenseDetails);
+        
         ExpenseDTO expenseDTO = new ExpenseDTO(updatedExpense.getId(), updatedExpense.getAmount(), updatedExpense.getDescription(), updatedExpense.getDate(), updatedExpense.getUser().getId(), updatedExpense.getCategory().getName());
         return ResponseEntity.ok(expenseDTO);
     }
 
     // Delete Expense
-    @DeleteMapping("/{userId}/user/{expenseId}")
-    public ResponseEntity<Object> deleteExpense(@PathVariable Long userId, @PathVariable Long expenseId) {
+    @DeleteMapping("/{expenseId}")
+    public ResponseEntity<Object> deleteExpense(@PathVariable Long expenseId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
+        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new IllegalArgumentException("Expense not found with id " + expenseId));
+        if (expense.getUser().getId() != userId) {
+            return ResponseEntity.status(401).build();
+        }
         return expenseServices.deleteExpense(expenseId);
     }
 
     // Get Expenses by Category
-    @GetMapping("/{userId}/{category}")
-    public ResponseEntity<List<ExpenseDTO>> getExpenseByCategory(@PathVariable Long userId, @PathVariable Long category) {
+    @GetMapping("/{category}")
+    public ResponseEntity<List<ExpenseDTO>> getExpenseByCategory(@PathVariable Long category) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         // check if user and category exist
         Optional<User> user = userRepository.findById(userId);
         if (!user.isPresent()) {
@@ -117,8 +139,10 @@ public class ExpenseController {
     }
 
     // Get total expenses per category for a user
-    @GetMapping("/{userId}/category-total")
-    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategory(@PathVariable Long userId) {
+    @GetMapping("/category-total")
+    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategory() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((User) principal).getId();
         List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
         BarGraphTotal barGraphTotal = new BarGraphTotal(expenses);
         SwingUtilities.invokeLater(() -> barGraphTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/BarGraphTotal.png"));
