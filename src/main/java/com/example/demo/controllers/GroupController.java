@@ -82,6 +82,8 @@ public class GroupController {
         return groupDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
+
     // Update Group Details
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDetails) {
@@ -106,6 +108,19 @@ public class GroupController {
         }
         return groupServices.deleteGroup(groupId);
     }
+
+    // get user groups
+    @GetMapping("/{userId}/groups")
+    public ResponseEntity<List<GroupDTO>> getUserGroups(@PathVariable Long userId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long adminId = ((User) principal).getId();
+        if (userRepository.findById(userId).get().getId() != adminId) {
+            return ResponseEntity.status(401).build();
+        }
+        List<GroupDTO> groups = groupServices.getUserGroups(userId);
+        return ResponseEntity.ok(groups);
+    }
+
 
     // Add User to Group
     @PostMapping("/{groupId}/users/{userId}")

@@ -15,6 +15,7 @@ public interface SplitRepository extends CrudRepository<Split, Long> {
 
     public List<Split> findByGroupId(long id);
 
+    public Optional<Split> findByPayerIdAndPayeeId(long id, long id2);
     
     public List<Split> findByPayerOrPayee(User user, User user2);
 

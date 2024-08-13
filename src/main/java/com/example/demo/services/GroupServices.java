@@ -87,6 +87,19 @@ public class GroupServices {
         return null;
     }
 
+    public List<GroupDTO> getUserGroups(Long id) {
+        List<GroupDTO> groups = groupRepository.findByUsersId(id).stream().map(
+            group -> new GroupDTO(
+                group.getId(),
+                group.getName(),
+                group.getDate(),
+                group.getAdmin().getId()
+            )
+        ).toList();
+        return groups;
+        
+    }
+
     // addUserToGroup
     public Group addUserToGroup(Long groupId, Long userId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));

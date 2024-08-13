@@ -123,5 +123,10 @@ public class SplitServices {
         splitRepository.deleteById(id);
         return null;
     }
+
+    // find split by payer id and payee id
+    public Optional<Split> findSettlementByPayerIdAndPayeeId(long payerId, long payeeId){
+        return splitRepository.findByPayerIdAndPayeeId(payerId, payeeId);
+    }
     
 }

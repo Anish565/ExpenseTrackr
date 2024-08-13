@@ -19,6 +19,7 @@ import com.example.demo.repositories.SettlementRepository;
 import com.example.demo.repositories.GroupRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.SettlementServices;
+import com.example.demo.services.SplitServices;
 
 
 @RestController
@@ -27,6 +28,9 @@ public class SettlementController {
     
     @Autowired
     private SettlementRepository settlementsRepository;
+
+    @Autowired
+    private SplitServices splitServices;
 
     @Autowired
     private SettlementServices settlementsServices;
@@ -46,6 +50,8 @@ public class SettlementController {
         if (settlement.payerId() != userId || settlement.receiverId() != userId) {
             return ResponseEntity.status(401).build();
         }
+        Optional<Split> split = splitServices.findSettlementByPayerIdAndPayeeId(settlement.receiverId(), settlement.payerId()); // (86, 0)
+        
         Optional<Group> group = groupRepository.findById(settlement.groupId());
         if (group.isPresent()) {
             Optional<User> payer = userRepository.findById(settlement.payerId());
@@ -67,6 +73,7 @@ public class SettlementController {
                         savedSettlement.getPayer().getId(),
                         savedSettlement.getReceiver().getId()
                     );
+                    split.get().setSettled(true);
                     return ResponseEntity.ok(settlementDTO);
                 } else {
                     return ResponseEntity.notFound().build();
