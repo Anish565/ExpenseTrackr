@@ -87,14 +87,15 @@ function GroupManagement() {
     const [isEditGroupModalOpen,setIsEditGroupModalOpen] = useState(false);
     const [user, setUser] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("splits");
+    const [activeTab, setActiveTab] = useState(localStorage.getItem("update") || "splits");
     const [isEditSplitModalOpen, setIsEditSplitModalOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
 
     useEffect(() => {
         console.log(groupId);
-
+        localStorage.setItem("update", "");
+        // Fetch Group Details
         const fetchGroup = async () => {
             try{
                 const groupDetails = await fetch(`http://localhost:8081/groups/${groupId}`,{
@@ -112,6 +113,7 @@ function GroupManagement() {
             }
         };
 
+        // Fetch Splits
         const fetchSplits = async () => {
             try{
                 const splitsData = await fetch(`http://localhost:8081/splits/group/${groupId}`,{
@@ -130,6 +132,7 @@ function GroupManagement() {
             }
         };
 
+        // Fetch Settlements
         const fetchSettlements = async () => {
             try{
                 const settlements = await fetch(`http://localhost:8081/settlements/groups/${groupId}`,{
@@ -147,6 +150,7 @@ function GroupManagement() {
             }
         };
 
+        // Fetch User
         const fetchUser = async () => {
             try{
                 const user = await fetch(`http://localhost:8081/groups/${groupId}/users`,{
@@ -164,6 +168,7 @@ function GroupManagement() {
             }
         };
 
+        // Fetch Categories
         const fetchCategories = async () => {
             try{
                 const categories = await fetch(`http://localhost:8081/categories`,{
@@ -190,10 +195,12 @@ function GroupManagement() {
         getGroupUsers();
     }, []);
 
+    // Toggle menu
     const toggleMenu = (id: number) => {
         setOpenMenuId(openMenuId === id ? null : id);
       };
 
+    // Fetch Group Users
     const getGroupUsers = async () => {
         try{
             const response = await fetch(`http://localhost:8081/groups/${groupId}/users`, {
@@ -212,6 +219,7 @@ function GroupManagement() {
         
     }
     
+    // Search Users
     const searchUsers = async () => {
         try{
             const response = await fetch(`http://localhost:8081/users/search/all`, {
@@ -230,6 +238,7 @@ function GroupManagement() {
 
     };
 
+    // Add Split
     const addSplit = async () => {
         
     if (!group) {
@@ -247,6 +256,7 @@ function GroupManagement() {
     });
 
     if (response.ok) {
+        localStorage.setItem("update", "splits");
         window.location.reload();
     } else if (response.status === 400) {
         alert("Same payer and payee cannot be selected");
@@ -255,6 +265,7 @@ function GroupManagement() {
 
     };  
 
+    // Add Settlement
     const addSettlement = async (split: Split, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         if (!group) {
@@ -274,7 +285,7 @@ function GroupManagement() {
         }
         console.log(settlement)
 
-        const resposne = await fetch(`http://localhost:8081/settlements`, {   
+        const resposne = await fetch(`http://localhost:8081/settlements/${split.id}`, {   
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -284,18 +295,24 @@ function GroupManagement() {
         });
 
         if (resposne.ok) {
+            localStorage.setItem("update", "settlements");
             window.location.reload();
+        } else if (resposne.status === 401) {
+            alert("Not a part of the split");
         }
-
     }
 
+    // Tab Change
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
     }
+
+    // User Select
     const handleUserSelect = (event) => {
         setSelectedUser(event.target.value);
     };
 
+    // Handle Input Change
     const handleInputChange = (event) => {
         setNewSplit({
             ...newSplit,
@@ -303,7 +320,7 @@ function GroupManagement() {
         });
     }
 
-
+    // Add User to Group
     const addUser = async () => {
         console.log(selectedUser)
         try{
@@ -316,15 +333,19 @@ function GroupManagement() {
                 body: JSON.stringify({userId: selectedUser?.id}),
             });
             if (response.ok) {
+                localStorage.setItem("update", "users");
                 window.location.reload();
             } else if (response.status === 400) {
                 alert("User already added to group");
+            } else if (response.status === 401) {
+                alert("Unauthorized");
             }
         } catch (error) {
             console.error("Error fetching group details:", error);
         }
     }
 
+    // Remove User from Group
     const removeUser = async (selectedUser: User, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         try{
@@ -338,12 +359,17 @@ function GroupManagement() {
             });
             if (response.ok) {
                 window.location.reload();
+            } else if (response.status === 400) {
+                alert("User is the admin of the group");
+            } else if (response.status === 401) {
+                alert("Unauthorized");
             }
         } catch (error) {
             console.error("Error fetching group details:", error);
         }
     }
 
+    // Edit Split
     const handleEditSplit = async (split: Split, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         try{
@@ -366,6 +392,7 @@ function GroupManagement() {
         }
     }
 
+    // Delete Split
     const handleDeleteSplit = async (split: Split, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         try{
@@ -386,13 +413,14 @@ function GroupManagement() {
         }
     }
 
+    // Open Edit Modal
     const openEditModal = (split: Split) => {
         setNewSplit(split);
         setIsEditSplitModalOpen(true);
     }
     
     
-
+    // Edit Group
     const handleUpdateGroup = async (group: Group, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         console.log(group);
@@ -408,6 +436,8 @@ function GroupManagement() {
             if (response.ok){
                 setIsEditGroupModalOpen(false);
                 window.location.reload();
+            } else if (response.status === 401) {
+                alert("Unauthorized");
             } else {
                 console.error("Error editing group:", await response.json());
             }
@@ -416,6 +446,7 @@ function GroupManagement() {
         }
     }
 
+    // Delete Group
     const handleDeleteGroup = async () => {
         console.log("delete group");
         try{
@@ -428,6 +459,8 @@ function GroupManagement() {
             });
             if (response.ok){
                 window.location.href = "/home";
+            } else if (response.status === 401) {
+                alert("Unauthorized");
             } else {
                 console.error("Error deleting group:", await response.json());
             }

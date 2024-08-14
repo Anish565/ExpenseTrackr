@@ -47,9 +47,11 @@ public class SplitController {
         Long userId = ((User) principal).getId();
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        // check if user is admin or part of the group
         if (group.getAdmin().getId() != userId && group.getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
+        // check if the payer and payee are selected
         if (splitDetails.payerId() == splitDetails.payeeId()) {
             return ResponseEntity.status(400).build();
         }
@@ -76,7 +78,7 @@ public class SplitController {
         Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         String message = "";
-
+        // check if user is admin or part of the group
         if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
@@ -99,7 +101,8 @@ public class SplitController {
         Long userId = ((User) principal).getId();
         Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
         User user  = userRepository.findById(splitDetails.payerId()).orElseThrow(() -> new RuntimeException("User not found"));
-        if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
+        // check if user is admin or part of the group
+        if (split.getGroup().getAdmin().getId() != userId && split.getGroup().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         Split updatedSplit = splitServices.updateSplit(splitId, splitDetails);
@@ -114,6 +117,7 @@ public class SplitController {
         Long userId = ((User) principal).getId();
         Split split = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
         User user  = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        // check if user is admin or part of the group
         if (split.getGroup().getAdmin().getId() != userId || split.getGroup().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
@@ -138,7 +142,8 @@ public class SplitController {
          Long userId = ((User) principal).getId();
          Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
          User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-         if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+         // check if user is admin or part of the group
+         if (group.getAdmin().getId() != userId && group.getUsers().contains(user) == false) {
              return ResponseEntity.status(401).build();
          }
          List<SplitDTO> splits = splitServices.getSplitsByGroup(groupId);

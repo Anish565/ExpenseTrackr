@@ -11,6 +11,4 @@ public record SettlementDTO(
     String payerName,
     long receiverId,
     String receiverName
-) {
-    
-}
+) {}

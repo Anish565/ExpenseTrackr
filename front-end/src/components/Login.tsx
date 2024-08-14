@@ -13,14 +13,17 @@ export default function Login() {
         localStorage.setItem("isUpdate", false.toString());
     }, []);
 
+    // Handle form input changes
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUsername(e.target.value);
     };
 
+    // Handle form input changes
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPassword(e.target.value);
     };
 
+    // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
@@ -50,11 +53,6 @@ export default function Login() {
         }
     };   
 
-    // const handleError = (error: string) => {
-    //     if (error) {
-    //         alert(error);
-    //     }
-    // };
     return (
         <>
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

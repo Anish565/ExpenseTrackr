@@ -1,11 +1,10 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function NotFoundPage(){
   const navigate = useNavigate();
 
   const redirectToDashboard = () => {
-    navigate('/home'); // Assuming '/dashboard' is the route for your dashboard page
+    navigate('/home'); 
   };
 
   return (

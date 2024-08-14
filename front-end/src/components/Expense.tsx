@@ -30,8 +30,7 @@ function Expense() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-//   const [selectedExpense, setSelectedExpense] = useState<ExpenseProps | null>(null);
-  const [view, setView] = useState<'bar' | 'pie'>('bar'); // To toggle between bar and pie chart
+  const [view, setView] = useState<'bar' | 'pie'>('bar'); 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -41,6 +40,7 @@ function Expense() {
     fetchPieChart();
   }, []);
 
+  // Fetch expenses
   const fetchExpenses = async () => {
     try {
       const response = await fetch('http://localhost:8081/users/expenses/me', {
@@ -57,6 +57,7 @@ function Expense() {
     }
   };
 
+  // Fetch categories
   const fetchCategories = async () => {
     try {
       const response = await fetch('http://localhost:8081/categories', {
@@ -73,6 +74,7 @@ function Expense() {
     }
   };
 
+  // Fetch bar chart
   const fetchBarChart = async () => {
     try {
       const response = await fetch('http://localhost:8081/expenses/category-total/bar-graph', {
@@ -89,6 +91,7 @@ function Expense() {
     }
   };
 
+  // Fetch pie chart
   const fetchPieChart = async () => {
     try {
       const response = await fetch('http://localhost:8081/expenses/category-total/pie-chart', {
@@ -105,6 +108,7 @@ function Expense() {
     }
   };
 
+  // Handle add or update expense
   const handleAddOrUpdateExpense = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // console.log(expense);
@@ -137,6 +141,7 @@ function Expense() {
     }
   };
 
+  // Handle edit expense
   const handleEditExpense = (expense: ExpenseProps) => {
     setExpense(expense);
     setIsEditMode(true);
@@ -144,6 +149,7 @@ function Expense() {
     console.log(expense);
   };
 
+  // Handle delete expense
   const handleDeleteExpense = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:8081/expenses/${id}`, {
@@ -164,10 +170,12 @@ function Expense() {
     }
   };
 
+  // Toggle menu
   const toggleMenu = (id: number) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
+  // Reset form
   const resetForm = () => {
     setExpense({
       id: 0,

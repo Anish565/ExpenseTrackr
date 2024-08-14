@@ -7,12 +7,10 @@ import org.springframework.stereotype.Service;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
-import com.example.demo.DTOs.CategoryDTO;
 import com.example.demo.DTOs.CategoryExpenseDTO;
 import com.example.demo.DTOs.ExpenseDTO;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +84,6 @@ public class ExpenseServices {
 
     // get total expenses by category
     public List<CategoryExpenseDTO> getTotalExpensesByCategory(long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
         List<Expense> expenses = expenseRepository.findByUserId(userId);
         List<Category> categories = categoryRepository.findAll();
 
@@ -115,7 +112,5 @@ public class ExpenseServices {
         return null;
 
     }
-
-    // Update expense
     
 }

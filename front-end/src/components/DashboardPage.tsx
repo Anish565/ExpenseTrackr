@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import '../index.css';
 import { Link } from "react-router-dom";
 
@@ -18,15 +18,16 @@ export default function DashboardPage() {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [totalExpenses, setTotalExpenses] = useState(0);
     const [groupsDetails, setGroupsDetails] = useState<GroupDetails[]>([]);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
+    const [isModalOpen, setIsModalOpen] = useState(false); 
     const [newGroup, setNewGroup] = useState<GroupDetails>({
         id: 0,
         name: "",
         date: new Date(),
         admin: ""
-    }); // New group name state
+    }); 
 
     useEffect(() => {
+        // Fetch user data
         const fetchUserData = async () => {
             try {
                 const response = await fetch(`http://localhost:8081/users/me`, {
@@ -42,6 +43,7 @@ export default function DashboardPage() {
             }
         };
 
+        // Fetch total expenses
         const fetchTotalExpenses = async () => {
             try {
                 const response = await fetch(`http://localhost:8081/users/balance/me`, {
@@ -58,6 +60,8 @@ export default function DashboardPage() {
             }
         };
 
+
+        // Fetch group details
         const fetchGroupDetails = async () => {
             try {
                 const response = await fetch(`http://localhost:8081/groups/me`, {
@@ -79,6 +83,7 @@ export default function DashboardPage() {
         fetchGroupDetails();
     }, []);
 
+    // Add Group
     const handleAddGroup = async () => {
         try {
             const response = await fetch(`http://localhost:8081/groups/`, {
@@ -92,7 +97,7 @@ export default function DashboardPage() {
 
             if (response.ok) {
                 setIsModalOpen(false);
-                window.location.reload(); // Reload to fetch updated group details
+                window.location.reload(); 
             }
         } catch (error) {
             console.error("Error adding group:", error);

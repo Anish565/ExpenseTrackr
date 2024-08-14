@@ -1,12 +1,9 @@
 package com.example.demo.controllers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 import java.util.Optional;
 
-import javax.swing.SwingUtilities;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.service.annotation.PutExchange;
 
 import com.example.demo.DTOs.CategoryExpenseDTO;
 import com.example.demo.DTOs.ExpenseDTO;
@@ -30,7 +26,6 @@ import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ExpenseRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.ExpenseServices;
-import com.example.demo.services.UserServices;
 
 @RestController
 @RequestMapping("/expenses")
@@ -42,9 +37,6 @@ public class ExpenseController {
     @Autowired
     private ExpenseServices expenseServices;
 
-
-    @Autowired
-    private UserServices userServices;
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -92,7 +84,7 @@ public class ExpenseController {
         if (optionalExpense.get().userId() == userId && optionalExpense.isPresent()) {
             return ResponseEntity.ok(optionalExpense.get());
         } else{
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build(); // 404
         }
     }
 
@@ -102,6 +94,7 @@ public class ExpenseController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new IllegalArgumentException("Expense not found with id " + expenseId));
+        // Check if the user making the request is the owner of the expense
         if (expense.getUser().getId() != userId) {
             return ResponseEntity.status(401).build();
         }
@@ -117,6 +110,7 @@ public class ExpenseController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new IllegalArgumentException("Expense not found with id " + expenseId));
+        // Check if the user making the request is the owner of the expense
         if (expense.getUser().getId() != userId) {
             return ResponseEntity.status(401).build();
         }
@@ -130,6 +124,7 @@ public class ExpenseController {
         Long userId = ((User) principal).getId();
         // check if user and category exist
         Optional<User> user = userRepository.findById(userId);
+        
         if (!user.isPresent()) {
             throw new IllegalArgumentException("User not found with id " + userId);
         }
@@ -143,7 +138,7 @@ public class ExpenseController {
 
     }
 
-    // Get total expenses per category for a user
+    // Get total expenses per category for bar chart
     @GetMapping("/category-total/bar-graph")
     public ResponseEntity<String> getExpensesByCategoryBar() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -154,6 +149,7 @@ public class ExpenseController {
         return ResponseEntity.ok(image);
     }
 
+    // Get total expenses per category for pie chart
     @GetMapping("/category-total/pie-chart")
     public ResponseEntity<String> getExpensesByCategoryPie() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

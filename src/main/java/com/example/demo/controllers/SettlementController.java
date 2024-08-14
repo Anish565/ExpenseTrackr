@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.DTOs.SettlementDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.SettlementRepository;
+import com.example.demo.repositories.SplitRepository;
 import com.example.demo.repositories.GroupRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.SettlementServices;
@@ -33,6 +34,9 @@ public class SettlementController {
     private SplitServices splitServices;
 
     @Autowired
+    private SplitRepository splitRepository;
+
+    @Autowired
     private SettlementServices settlementsServices;
 
     @Autowired
@@ -42,15 +46,15 @@ public class SettlementController {
     private UserRepository userRepository;
 
     // Create Settlement
-    @PostMapping
-    public ResponseEntity<SettlementDTO> createSettlement(@RequestBody SettlementDTO settlement) {
+    @PostMapping(path = "/{splitId}", consumes = "application/json")
+    public ResponseEntity<SettlementDTO> createSettlement(@PathVariable Long splitId,  @RequestBody SettlementDTO settlement) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         // only the payer and the receiver can initiate a settlement. 
         if (settlement.payerId() != userId && settlement.receiverId() != userId) {
             return ResponseEntity.status(401).build();
         }
-        Optional<Split> split = splitServices.findSettlementByPayerIdAndPayeeId(settlement.receiverId(), settlement.payerId()); // (86, 0)
+        Optional<Split> split = splitRepository.findById(splitId);
         
         Optional<Group> group = groupRepository.findById(settlement.groupId());
         if (group.isPresent()) {
@@ -97,8 +101,8 @@ public class SettlementController {
         Optional<Settlements> settlement = settlementsRepository.findById(settlementId);
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Group group = groupRepository.findById(settlement.get().getGroup().getId()).orElseThrow(() -> new RuntimeException("Group not found"));
-        
-        if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+        // if the user is not part of the group or the user is not the admin
+        if (group.getAdmin().getId() != userId && group.getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
 
@@ -122,7 +126,8 @@ public class SettlementController {
         Long userId = ((User) principal).getId();
         Optional<Group> group = groupRepository.findById(groupId);
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+        // if the user is not part of the group or the user is not the admin
+        if (group.get().getAdmin().getId() != userId &&  group.get().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         List<SettlementDTO> settlements = settlementsServices.findSettlementsByGroupId(groupId);

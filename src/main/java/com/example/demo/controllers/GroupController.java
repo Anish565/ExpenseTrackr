@@ -22,12 +22,9 @@ import com.example.demo.DTOs.SplitDTO;
 import com.example.demo.DTOs.UserDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.GroupRepository;
-import com.example.demo.repositories.SettlementRepository;
-import com.example.demo.repositories.SplitRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.GroupServices;
 
-import jakarta.websocket.OnClose;
 
 @RestController
 @RequestMapping("/groups")
@@ -42,11 +39,6 @@ public class GroupController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private SplitRepository splitRepository;
-
-    @Autowired
-    private SettlementRepository settlementRepository;
 
     
     // Create Group
@@ -76,7 +68,8 @@ public class GroupController {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Optional<Group> group = groupRepository.findById(groupId);
         Optional<GroupDTO> groupDTO = groupServices.findGroupById(groupId);
-        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+        // check if user is a member of the group
+        if (group.get().getAdmin().getId() != userId && group.get().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         return groupDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -89,8 +82,9 @@ public class GroupController {
     public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long groupId, @RequestBody GroupDTO groupDetails) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
-        // User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        
         Group updatedGroup = groupServices.updateGroup(groupId, groupDetails);
+        // check if the user is the admin of the group
         if (updatedGroup.getAdmin().getId() != userId) {
             return ResponseEntity.status(401).build();
         }
@@ -103,6 +97,7 @@ public class GroupController {
     public ResponseEntity<Object> deleteGroup(@PathVariable Long groupId) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
+        // check if the user is the admin of the group
         if (groupRepository.findById(groupId).get().getAdmin().getId() != userId) {
             return ResponseEntity.status(401).build();
         }
@@ -124,9 +119,11 @@ public class GroupController {
     public ResponseEntity<GroupDTO> addUserToGroup(@PathVariable long groupId, @PathVariable long userId) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long adminId = ((User) principal).getId();
+        // check if user is already in the group
         if (groupRepository.findById(groupId).get().getUsers().contains(userRepository.findById(userId).get())) {
             return ResponseEntity.status(400).build();
         }
+        // check if user is the admin of the group
         if (groupRepository.findById(groupId).get().getAdmin().getId() != adminId) {
             return ResponseEntity.status(401).build();
         }
@@ -141,9 +138,11 @@ public class GroupController {
     public ResponseEntity<GroupDTO> removeUserFromGroup(@PathVariable long groupId, @PathVariable long userId) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long adminId = ((User) principal).getId();
+        // check if user is the admin of the group
         if (groupRepository.findById(groupId).get().getAdmin().getId() != adminId) {
             return ResponseEntity.status(401).build();
         }
+        // checl if the user is the admin of the group
         if (adminId == userId) {
             return ResponseEntity.status(400).build();
         }
@@ -159,7 +158,8 @@ public class GroupController {
         Long userId = ((User) principal).getId();
         Optional<Group> group = groupRepository.findById(groupId);
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+        // check if user is admin or part of the group
+        if (group.get().getAdmin().getId() != userId && group.get().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         List<UserDTO> users = groupServices.getGroupUsers(groupId);
@@ -173,7 +173,8 @@ public class GroupController {
         Long userId = ((User) principal).getId();
         Optional<Group> group = groupRepository.findById(groupId);
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+        // check if user is admin or part of the group
+        if (group.get().getAdmin().getId() != userId && group.get().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         List<SplitDTO> splits = groupServices.getGroupSplits(groupId);
@@ -187,7 +188,8 @@ public class GroupController {
         Long userId = ((User) principal).getId();
         Optional<Group> group = groupRepository.findById(groupId);
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (group.get().getAdmin().getId() != userId || group.get().getUsers().contains(user) == false) {
+        // check if user is admin or part of the group
+        if (group.get().getAdmin().getId() != userId && group.get().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
         List<SettlementDTO> settlements = groupServices.getGroupSettlements(groupId);

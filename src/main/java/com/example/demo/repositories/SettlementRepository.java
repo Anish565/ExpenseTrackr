@@ -15,8 +15,6 @@ public interface SettlementRepository extends CrudRepository<Settlements, Long> 
 
     public List<Settlements> findByGroupId(long id);
 
-    // public List<Settlements> findByPayerIdOrReceiverId(Long id, Long id2);
-
     public List<Settlements> findByReceiver(User receiver);
 
     public List<Settlements> findByPayer(User payer);

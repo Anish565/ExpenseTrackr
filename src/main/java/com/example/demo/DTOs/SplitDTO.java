@@ -12,7 +12,4 @@ public record SplitDTO(
     Boolean settled,
     String status
 
-) {
-
-    
-}
+) {}

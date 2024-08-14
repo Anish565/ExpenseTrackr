@@ -1,13 +1,10 @@
 package com.example.demo.repositories;
 
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
-import com.example.demo.DTOs.ExpenseDTO;
 import com.example.demo.entities.*;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +16,7 @@ public interface ExpenseRepository extends CrudRepository<Expense, Long> {
     public Optional<Expense> findById(Long id);
 
     public List<Expense> findByUserId(Long id);
-
-    // @Query("SELECT e.category.categoryName, SUM(e.amount) FROM Expense e GROUP BY e.category.categoryName")
+    
     public Double findTotalExpenseByCategory(@Param("categoryId") long categoryId);  
 
     
@@ -33,6 +29,4 @@ public interface ExpenseRepository extends CrudRepository<Expense, Long> {
     public List<Expense> findByUserAndDate(User user, Date date);
 
     public List<Expense> findByUserAndDateAndCategory(User user, Date date, Category category);
-
-    // public List<Expense> findByUserIdAndExpenseId(Optional<User> user, long expenseId);
 }

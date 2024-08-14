@@ -4,12 +4,10 @@ import org.springframework.data.repository.CrudRepository;
 
 import com.example.demo.entities.*;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.demo.DTOs.*;
 
 public interface GroupRepository extends CrudRepository<Group, Long> {
     
@@ -19,8 +17,6 @@ public interface GroupRepository extends CrudRepository<Group, Long> {
 
     public List<Group> findByUsersId(Long id);
     
-    // public List<GroupDTO> findByUsers(User user);
-
     public List<Group> findByAdmin(User user);
 
     public List<Group> findByDate(Date date);

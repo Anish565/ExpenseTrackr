@@ -17,18 +17,22 @@ function RegisterForm() {
     const [message, setMessage] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
 
+    // Handle form input changes
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prevState => ({...prevState, username: e.target.value}));
     };
 
+    // Handle form input changes
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prevState => ({...prevState, email: e.target.value}));
     };
 
+    // Handle form input changes
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prevState => ({...prevState, password: e.target.value}));
     };
 
+    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -48,7 +52,6 @@ function RegisterForm() {
                 email: '',
                 password: ''
             });
-            // redirect to login page
             window.location.href = '/login';
 
         } else {

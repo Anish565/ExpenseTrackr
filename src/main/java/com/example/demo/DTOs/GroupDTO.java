@@ -1,9 +1,6 @@
 package com.example.demo.DTOs;
 
 import java.util.Date;
-import java.util.List;
-
-import com.example.demo.entities.User;
 
 public record GroupDTO(
     Long id,
@@ -11,7 +8,4 @@ public record GroupDTO(
     Date date,
     long admin,
     String adminName
-) {
-
-    
-}
+) {}

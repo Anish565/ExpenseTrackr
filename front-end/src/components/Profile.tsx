@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Password } from '@mui/icons-material';
 
 interface UserInterface {
     username?: string;
@@ -25,13 +24,8 @@ function Profile() {
         confirmPassword: '',
     });
 
-    // const [completeUser, setCompleteUser] = useState<UserInterface>({
-    //     username: '',
-    //     email: '',
-    //     password: '',
-    // })
-    
     useEffect(() => {
+        // Fetch user
         const fetchUser = async () => {
             try {
                 const response = await fetch('http://localhost:8081/users/me', {
@@ -54,6 +48,7 @@ function Profile() {
         fetchUser();
     }, []);
 
+    // Update user
     const handleUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -85,6 +80,7 @@ function Profile() {
         }
     };
 
+    // Update password
     const handleChangePassword = async (event: React.ChangeEvent<HTMLFormElement>) => {
         event.preventDefault();
 

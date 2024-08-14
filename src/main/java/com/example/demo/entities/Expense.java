@@ -3,7 +3,6 @@ package com.example.demo.entities;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,6 +45,8 @@ public class Expense {
         this.date = date;
         this.user = user;
     }
+
+    // Getters and setters
 
     public Long getId() {
         return id;

@@ -5,20 +5,16 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.*;
 
 import com.example.demo.DTOs.ExpenseDTO;
 import com.example.demo.DTOs.GroupDTO;
@@ -28,8 +24,6 @@ import com.example.demo.DTOs.UserCompleteDTO;
 import com.example.demo.DTOs.UserDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repositories.ExpenseRepository;
-import com.example.demo.repositories.SettlementRepository;
-import com.example.demo.repositories.SplitRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.GroupServices;
 import com.example.demo.services.SettlementServices;
@@ -59,11 +53,6 @@ public class UserController {
     @Autowired
     private ExpenseRepository expenseRepository;
 
-    @Autowired
-    private SplitRepository splitRepository;
-
-    @Autowired
-    private SettlementRepository settlementRepository;
 
     // Create User
     @PostMapping(consumes = "application/json")
@@ -99,7 +88,6 @@ public class UserController {
     }
 
     // Delete User
-    // usable to use Void in the return type
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> deleteUser(@PathVariable Long userId) {
         return userServices.deleteUser(userId);

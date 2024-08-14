@@ -1,11 +1,7 @@
 package com.example.demo.controllers;
 
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-// import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,12 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.DTOs.LoginDTO;
 import com.example.demo.DTOs.UserCompleteDTO;
 import com.example.demo.entities.User;
-import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.AuthenticationService;
 import com.example.demo.services.JwtService;
-import com.example.demo.services.UserServices;
 
-import jakarta.persistence.EntityManager;
+
 
 
 @RestController
@@ -37,8 +31,6 @@ public class AuthController {
         this.authenticationService = authenticationService;
     }
 
-    @Autowired
-    private UserServices userServices;
 
 
 
@@ -67,10 +59,7 @@ public class AuthController {
         return ResponseEntity.ok("Logout successful");
     }
 
-    // @PostMapping("/post")
-    // public void postUser() {
-    //     EntityManager entityManager = null;
-    // }
+    
     public class LoginResponse {
         private String token;
 
