@@ -6,6 +6,7 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string| null>(null);
     const update = localStorage.getItem("update");
+    const [passwordError, setPasswordError] = useState<string | null>(null);
     const isUpdate = localStorage.getItem("isUpdate");
     useEffect(() => {
         
@@ -13,6 +14,26 @@ export default function Login() {
         localStorage.setItem("isUpdate", false.toString());
     }, []);
 
+    // Validate password
+    const validatePassword = (password: string): string | null => {
+      if (password.length < 8) {
+        return 'Password must be at least 8 characters long.';
+      }
+      if (!/[A-Z]/.test(password)) {
+        return 'Password must contain at least one uppercase letter.';
+      }
+      if (!/[a-z]/.test(password)) {
+        return 'Password must contain at least one lowercase letter.';
+      }
+      if (!/[0-9]/.test(password)) {
+        return 'Password must contain at least one number.';
+      }
+      if (!/[!@#$%^&*]/.test(password)) {
+        return 'Password must contain at least one special character (!@#$%^&*).';
+      }
+      return null;
+    };
+    
     // Handle form input changes
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUsername(e.target.value);
@@ -20,7 +41,11 @@ export default function Login() {
 
     // Handle form input changes
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(e.target.value);
+        const newPassword = e.target.value;
+        setPassword(newPassword);
+
+        const error = validatePassword(newPassword);
+        setPasswordError(error);
     };
 
     // Handle form submission
@@ -38,8 +63,8 @@ export default function Login() {
             });
 
             if (!response.ok) {
-                const error = await response.text();
-                throw new Error("Invalid credentials: " + error);
+                const errorMessage = await response.json().then((data) => data.absolute);
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -85,11 +110,13 @@ export default function Login() {
                 className="w-full p-2 mt-1 border border-gray-300 rounded"
                 required
               />
+              {passwordError && <p className="text-red-500">{passwordError}</p>}
             </div>
             <div className="flex items-center justify-between">
               <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
                 Forgot Password?
               </a>
+              {error && <p className="text-red-500">{error}</p>}
               
               <button
                 type="submit"
@@ -97,7 +124,6 @@ export default function Login() {
               >
                 Login
               </button>
-              {error && <p className="text-red-500">{error}</p>}
 
             </div>
           </form>

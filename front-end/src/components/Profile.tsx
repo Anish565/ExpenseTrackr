@@ -25,6 +25,11 @@ function Profile() {
     });
 
     useEffect(() => {
+        // check if user is logged in
+        if (!localStorage.getItem('token')) {
+             window.location.href = '/login';
+        }
+
         // Fetch user
         const fetchUser = async () => {
             try {

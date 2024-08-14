@@ -14,9 +14,30 @@ function RegisterForm() {
         password: ''
     });
 
+    const [passwordError, setPasswordError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
 
+    // Validate password
+    const validatePassword = (password: string): string | null => {
+      if (password.length < 8) {
+        return 'Password must be at least 8 characters long.';
+      }
+      if (!/[A-Z]/.test(password)) {
+        return 'Password must contain at least one uppercase letter.';
+      }
+      if (!/[a-z]/.test(password)) {
+        return 'Password must contain at least one lowercase letter.';
+      }
+      if (!/[0-9]/.test(password)) {
+        return 'Password must contain at least one number.';
+      }
+      if (!/[!@#$%^&*]/.test(password)) {
+        return 'Password must contain at least one special character (!@#$%^&*).';
+      }
+      return null;
+    };
+    
     // Handle form input changes
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prevState => ({...prevState, username: e.target.value}));
@@ -29,7 +50,11 @@ function RegisterForm() {
 
     // Handle form input changes
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prevState => ({...prevState, password: e.target.value}));
+        const newPassword = e.target.value;
+        setFormData(prevState => ({...prevState, password: newPassword}));
+
+        const error = validatePassword(newPassword);
+        setPasswordError(error);
     };
 
     // Handle form submission
@@ -106,6 +131,7 @@ function RegisterForm() {
               className="w-full p-2 mt-1 border border-gray-300 rounded"
               required
             />
+            {passwordError && <p className="text-red-500 mt-1">{passwordError}</p>}
           </div>
           {message && (
             <div className={`text-sm ${isSuccess ? 'text-green-500' : 'text-red-500'}`}>

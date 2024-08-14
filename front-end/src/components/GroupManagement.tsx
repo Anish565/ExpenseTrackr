@@ -93,6 +93,12 @@ function GroupManagement() {
 
 
     useEffect(() => {
+
+        // check if user is logged in
+        if (!localStorage.getItem("token")) {
+            window.location.href = "/login";
+        }
+
         console.log(groupId);
         localStorage.setItem("update", "");
         // Fetch Group Details
@@ -298,6 +304,7 @@ function GroupManagement() {
             localStorage.setItem("update", "settlements");
             window.location.reload();
         } else if (resposne.status === 401) {
+            toggleMenu(0);
             alert("Not a part of the split");
         }
     }
@@ -405,6 +412,12 @@ function GroupManagement() {
             });
             if (response.ok){
                 window.location.reload();
+            } else if(response.status === 400){
+                toggleMenu(0);
+                alert("Not a part of the split");
+            }else if(response.status === 401){
+                toggleMenu(0);
+                alert("Unauthorized");
             } else {
                 console.error("Error deleting split:", await response.json());
             }
@@ -415,6 +428,7 @@ function GroupManagement() {
 
     // Open Edit Modal
     const openEditModal = (split: Split) => {
+        toggleMenu(0);
         setNewSplit(split);
         setIsEditSplitModalOpen(true);
     }
@@ -858,7 +872,7 @@ function GroupManagement() {
                                 className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
                                 onClick={(event) => handleUpdateGroup(group, event)}
                             >
-                                Add Group
+                                Update Group
                             </button>
                         </div>
                     </div>

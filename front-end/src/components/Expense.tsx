@@ -34,6 +34,11 @@ function Expense() {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   useEffect(() => {
+    // check if user is logged in
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+    
     fetchExpenses();
     fetchCategories();
     fetchBarChart();
@@ -146,6 +151,7 @@ function Expense() {
     setExpense(expense);
     setIsEditMode(true);
     setIsModalOpen(true);
+    toggleMenu(0);
     console.log(expense);
   };
 

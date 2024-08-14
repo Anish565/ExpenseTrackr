@@ -27,6 +27,11 @@ export default function DashboardPage() {
     }); 
 
     useEffect(() => {
+        // check if user is logged in
+        if (!localStorage.getItem("token")) {
+            window.location.href = "/login";
+        }
+
         // Fetch user data
         const fetchUserData = async () => {
             try {
