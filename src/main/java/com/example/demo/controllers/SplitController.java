@@ -105,6 +105,14 @@ public class SplitController {
         if (split.getGroup().getAdmin().getId() != userId && split.getGroup().getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
         }
+        // check if the payer and payee are selected
+        if (splitDetails.payerId() == splitDetails.payeeId()) {
+            return ResponseEntity.status(400).build();
+        }
+        // check if the user is part of the split
+        if (split.getPayer().getId() != userId && split.getPayee().getId() != userId) {
+            return ResponseEntity.status(401).build();
+        }
         Split updatedSplit = splitServices.updateSplit(splitId, splitDetails);
         SplitDTO splitDTO = new SplitDTO(updatedSplit.getId(), updatedSplit.getAmount(), updatedSplit.getGroup().getId(), updatedSplit.getPayer().getId(), updatedSplit.getPayer().getUsername(), updatedSplit.getPayee().getId(), updatedSplit.getPayee().getUsername(), updatedSplit.getCategory().getName(), updatedSplit.getSettled(), "");
         return ResponseEntity.ok(splitDTO);

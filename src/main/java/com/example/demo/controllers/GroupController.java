@@ -83,11 +83,11 @@ public class GroupController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         
-        Group updatedGroup = groupServices.updateGroup(groupId, groupDetails);
         // check if the user is the admin of the group
-        if (updatedGroup.getAdmin().getId() != userId) {
+        if (groupDetails.admin() != userId) {
             return ResponseEntity.status(401).build();
         }
+        Group updatedGroup = groupServices.updateGroup(groupId, groupDetails);
         GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId(), updatedGroup.getAdmin().getUsername());
         return ResponseEntity.ok(groupDTO);
     }

@@ -90,6 +90,13 @@ function GroupManagement() {
     const [activeTab, setActiveTab] = useState(localStorage.getItem("update") || "splits");
     const [isEditSplitModalOpen, setIsEditSplitModalOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const [newGroup, setNewGroup] = useState<Group>({
+        id: 0,
+        name: "",
+        date: new Date(),
+        admin: "",
+        adminName: ""
+    })
 
 
     useEffect(() => {
@@ -391,7 +398,14 @@ function GroupManagement() {
             if (response.ok){
                 setIsEditSplitModalOpen(false);
                 window.location.reload();
-            } else {
+            } else if (response.status === 401){
+                toggleMenu(0);
+                alert("Not a part of the split");
+            } else if (response.status === 400){
+                toggleMenu(0);
+                alert("Same payer and payee cannot be selected");
+            }
+            else {
                 console.error("Error editing split:", await response.json());
             }
         } catch (error){
@@ -438,14 +452,15 @@ function GroupManagement() {
     const handleUpdateGroup = async (group: Group, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.preventDefault();
         console.log(group);
+        
         try{
-            const response = await fetch(`http://localhost:8081/groups/${group.id}`, {
+            const response = await fetch(`http://localhost:8081/groups/${newGroup.id}`, {
                 method: "PUT",
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(group)
+                body: JSON.stringify(newGroup)
             });
             if (response.ok){
                 setIsEditGroupModalOpen(false);
@@ -502,7 +517,7 @@ function GroupManagement() {
                     </button>
                     <button
                         className="flex-1 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors duration-300"
-                        onClick={() => setIsEditGroupModalOpen(true)}
+                        onClick={() => {setIsEditGroupModalOpen(true); setNewGroup(group);}}
                     >
                         Edit Group
                     </button>
@@ -850,14 +865,14 @@ function GroupManagement() {
                         <h2 className="text-xl font-semibold mb-4">Add New Group</h2>
                         <input
                             type="text"
-                            value={group.name}
-                            onChange={(e) => setGroup({ ...group, name: e.target.value })}
+                            value={newGroup.name}
+                            onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
                             placeholder="Group Name"
                             className="mt-1 p-2 border border-gray-300 rounded-lg w-full"
                         />
                         <input
                           type = "date"
-                          defaultValue = {new Date(group.date).toISOString().split("T")[0]}
+                          defaultValue = {new Date(newGroup.date).toISOString().split("T")[0]}
                           readOnly
                           className = "mt-1 p-2 border border-gray-300 rounded-lg w-full"
                         />
