@@ -19,7 +19,7 @@ public interface GroupRepository extends CrudRepository<Group, Long> {
 
     public List<Group> findByUsersId(Long id);
     
-    public List<GroupDTO> findByUsers(User user);
+    // public List<GroupDTO> findByUsers(User user);
 
     public List<Group> findByAdmin(User user);
 

@@ -26,7 +26,9 @@ public class SettlementServices {
                 settlement.getSettledDate(),
                 settlement.getGroup().getId(),
                 settlement.getPayer().getId(),
-                settlement.getReceiver().getId()
+                settlement.getPayer().getUsername(),
+                settlement.getReceiver().getId(),
+                settlement.getReceiver().getUsername()
             )
         ).toList();
         return settlements;
@@ -41,7 +43,9 @@ public class SettlementServices {
                 settlement.getSettledDate(),
                 settlement.getGroup().getId(),
                 settlement.getPayer().getId(),
-                settlement.getReceiver().getId()
+                settlement.getPayer().getUsername(),
+                settlement.getReceiver().getId(),
+                settlement.getReceiver().getUsername()
             )
         );
         return settlements;
@@ -56,7 +60,9 @@ public class SettlementServices {
                 settlement.getSettledDate(),
                 settlement.getGroup().getId(),
                 settlement.getPayer().getId(),
-                settlement.getReceiver().getId()
+                settlement.getPayer().getUsername(),
+                settlement.getReceiver().getId(),
+                settlement.getReceiver().getUsername()
             )
         ).toList();
         return settlements;
@@ -71,7 +77,9 @@ public class SettlementServices {
                 settlement.getSettledDate(),
                 settlement.getGroup().getId(),
                 settlement.getPayer().getId(),
-                settlement.getReceiver().getId()
+                settlement.getPayer().getUsername(),
+                settlement.getReceiver().getId(),
+                settlement.getReceiver().getUsername()
             )
         ).toList();
         return settlements;

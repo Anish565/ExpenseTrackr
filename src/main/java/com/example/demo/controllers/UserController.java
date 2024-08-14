@@ -68,6 +68,10 @@ public class UserController {
     // Create User
     @PostMapping(consumes = "application/json")
     public User createUser(User user) {
+        User userFound = userRepository.findByUsername(user.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+        if (userFound != null) {
+            throw new RuntimeException("User already exists");
+        }
         return userServices.saveUser(user);
     }
 
@@ -79,6 +83,11 @@ public class UserController {
         return userServices.getUserById(userId);
     }
 
+    // Get User Details
+    @GetMapping(path = "/{userId}", produces = "application/json")
+    public Optional<UserDTO> getUserById(@PathVariable Long userId) {
+        return userServices.getUserById(userId);
+    }
     // Update User Details
     @PutMapping(consumes = "application/json", path = "/me")
     public ResponseEntity<UserDTO> updateUser(@RequestBody UserCompleteDTO userCompleteDTO) {
@@ -147,9 +156,9 @@ public class UserController {
     }
 
      // Search Users
-    @GetMapping(path = "/search/query={query}", produces = "application/json")
-    public ResponseEntity<List<UserDTO>> searchUsers(@PathVariable String query) {
-        List<UserDTO> users = userServices.searchUsers(query);
+    @GetMapping(path = "/search/all", produces = "application/json")
+    public ResponseEntity<List<UserDTO>> searchUsers() {
+        List<UserDTO> users = userServices.searchUsers();
         return ResponseEntity.ok(users);
     }
 

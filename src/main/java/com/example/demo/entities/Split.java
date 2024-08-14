@@ -105,7 +105,7 @@ public class Split {
         this.amount = amount;
     }
 
-    public boolean isSettled() {
+    public boolean getSettled() {
         return settled;
     }
 

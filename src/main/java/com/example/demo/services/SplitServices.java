@@ -38,9 +38,11 @@ public class SplitServices {
                 split.getAmount(),
                 split.getGroup().getId(),
                 split.getPayer().getId(),
+                split.getPayer().getUsername(),
                 split.getPayee().getId(),
+                split.getPayee().getUsername(),
                 split.getCategory().getName(),
-                split.isSettled(),
+                split.getSettled(),
                 ""
             )
         ).toList();
@@ -55,9 +57,11 @@ public class SplitServices {
                 split.getAmount(),
                 split.getGroup().getId(),
                 split.getPayer().getId(),
+                split.getPayer().getUsername(),
                 split.getPayee().getId(),
+                split.getPayee().getUsername(),
                 split.getCategory().getName(),
-                split.isSettled(),
+                split.getSettled(),
                 ""
             )
         );
@@ -73,9 +77,11 @@ public class SplitServices {
                 split.getAmount(),
                 split.getGroup().getId(),
                 split.getPayer().getId(),
+                split.getPayer().getUsername(),
                 split.getPayee().getId(),
+                split.getPayee().getUsername(),
                 split.getCategory().getName(),
-                split.isSettled(),
+                split.getSettled(),
                 ""
             )
         ).toList();
@@ -90,9 +96,11 @@ public class SplitServices {
                 split.getAmount(),
                 split.getGroup().getId(),
                 split.getPayer().getId(),
+                split.getPayer().getUsername(),
                 split.getPayee().getId(),
+                split.getPayee().getUsername(),
                 split.getCategory().getName(),
-                split.isSettled(),
+                split.getSettled(),
                 ""
             )
         ).toList();

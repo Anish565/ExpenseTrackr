@@ -3,18 +3,21 @@ package com.example.demo.graphs;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import com.example.demo.DTOs.CategoryExpenseDTO;
 
 public class PieChartTotal {
-    public void saveChartAsImage(List<CategoryExpenseDTO> data, String filePath) {
+    public String saveChartAsImage(List<CategoryExpenseDTO> data) {
         int width = 800;
         int height = 600;
         int padding = 50;
 
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = image.createGraphics();
 
@@ -89,10 +92,11 @@ public class PieChartTotal {
 
         // Save the image to a file
         try {
-            ImageIO.write(image, "png", new File(filePath));
-            System.out.println("Pie chart image saved to: " + filePath);
+            ImageIO.write(image, "png", outputStream);
+            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }    
 }

@@ -5,12 +5,15 @@ import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import com.example.demo.DTOs.CategoryExpenseDTO;
+
+import java.util.Base64;
 import java.util.List;
 
 public class BarGraphTotal extends JPanel {
-    public void saveChartAsImage(List<CategoryExpenseDTO> data, String filePath) {
+    public String saveChartAsImage(List<CategoryExpenseDTO> data) {
         int width = 800;
         int height = 600;
         int padding = 50;
@@ -19,6 +22,7 @@ public class BarGraphTotal extends JPanel {
         int barSpacing = 30; // Increased spacing between bars
         int numberOfBars = data.size();
 
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = image.createGraphics();
 
@@ -91,11 +95,12 @@ public class BarGraphTotal extends JPanel {
 
         // Save the image to a file
         try {
-            ImageIO.write(image, "png", new File(filePath));
-            System.out.println("Chart image saved to: " + filePath);
+            ImageIO.write(image, "png", outputStream);
+            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 

@@ -9,7 +9,8 @@ public record GroupDTO(
     Long id,
     String name,
     Date date,
-    long admin
+    long admin,
+    String adminName
 ) {
 
     

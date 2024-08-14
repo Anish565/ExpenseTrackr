@@ -1,7 +1,6 @@
 package com.example.demo.controllers;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,8 +47,11 @@ public class SplitController {
         Long userId = ((User) principal).getId();
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (group.getAdmin().getId() != userId || group.getUsers().contains(user) == false) {
+        if (group.getAdmin().getId() != userId && group.getUsers().contains(user) == false) {
             return ResponseEntity.status(401).build();
+        }
+        if (splitDetails.payerId() == splitDetails.payeeId()) {
+            return ResponseEntity.status(400).build();
         }
         User payee = userRepository.findById(splitDetails.payeeId()).orElseThrow(() -> new RuntimeException("Payee not found"));
         User payer = userRepository.findById(splitDetails.payerId()).orElseThrow(() -> new RuntimeException("Payer not found"));
@@ -62,7 +64,7 @@ public class SplitController {
         split.setAmount(splitDetails.amount());
         split.setSettled(false);
         splitServices.saveSplit(split);
-        SplitDTO splitDTO = new SplitDTO(split.getId(), split.getAmount(), split.getGroup().getId(), split.getPayer().getId(), split.getPayee().getId(), split.getCategory().getName(), split.isSettled(), "");
+        SplitDTO splitDTO = new SplitDTO(split.getId(), split.getAmount(), split.getGroup().getId(), split.getPayer().getId(), split.getPayer().getUsername(), split.getPayee().getId(), split.getPayee().getUsername(), split.getCategory().getName(), split.getSettled(), "");
         return ResponseEntity.ok(splitDTO);
     }
 
@@ -85,7 +87,7 @@ public class SplitController {
 
         Split splitFound = splitRepository.findById(splitId).orElseThrow(() -> new RuntimeException("Split not found"));
         
-        SplitDTO splitDTO = new SplitDTO(splitFound.getId(), splitFound.getAmount(), splitFound.getGroup().getId(), splitFound.getPayer().getId(), splitFound.getPayee().getId(), splitFound.getCategory().getName(), splitFound.isSettled(), message);
+        SplitDTO splitDTO = new SplitDTO(splitFound.getId(), splitFound.getAmount(), splitFound.getGroup().getId(), splitFound.getPayer().getId(), splitFound.getPayer().getUsername(), splitFound.getPayee().getId(), splitFound.getPayee().getUsername(), splitFound.getCategory().getName(), splitFound.getSettled(), message);
         
         return ResponseEntity.ok(splitDTO);
     }
@@ -101,7 +103,7 @@ public class SplitController {
             return ResponseEntity.status(401).build();
         }
         Split updatedSplit = splitServices.updateSplit(splitId, splitDetails);
-        SplitDTO splitDTO = new SplitDTO(updatedSplit.getId(), updatedSplit.getAmount(), updatedSplit.getGroup().getId(), updatedSplit.getPayer().getId(), updatedSplit.getPayee().getId(), updatedSplit.getCategory().getName(), updatedSplit.isSettled(), "");
+        SplitDTO splitDTO = new SplitDTO(updatedSplit.getId(), updatedSplit.getAmount(), updatedSplit.getGroup().getId(), updatedSplit.getPayer().getId(), updatedSplit.getPayer().getUsername(), updatedSplit.getPayee().getId(), updatedSplit.getPayee().getUsername(), updatedSplit.getCategory().getName(), updatedSplit.getSettled(), "");
         return ResponseEntity.ok(splitDTO);
     }
 

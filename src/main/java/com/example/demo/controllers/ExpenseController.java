@@ -53,20 +53,24 @@ public class ExpenseController {
     private UserRepository userRepository;
 
     // Create Expense
-    @PostMapping("/{categoryId}")
-    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody ExpenseDTO expense, @PathVariable Long categoryId) {
+    @PostMapping(path = "/", consumes = "application/json")
+    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody ExpenseDTO expense) {
+        System.out.println(expense);
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found with id " + userId));
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new IllegalArgumentException("Category not found with id " + categoryId));
+
+        Category category = categoryRepository.findByName(expense.categoryName()).orElseThrow(() -> new IllegalArgumentException("Category not found with name " + expense.categoryName()));
         Expense newExpense = new Expense();
         newExpense.setAmount(expense.amount());
         newExpense.setDescription(expense.description());
         newExpense.setDate(expense.date());
         newExpense.setUser(user);
         newExpense.setCategory(category);
+        System.out.println("here");
         expenseRepository.save(newExpense);
         ExpenseDTO expenseDTO = new ExpenseDTO(newExpense.getId(), newExpense.getAmount(), newExpense.getDescription(), newExpense.getDate(), newExpense.getUser().getId(), newExpense.getCategory().getName());
+        System.out.println(expenseDTO);
         return ResponseEntity.ok(expenseDTO);
     }
 
@@ -141,22 +145,22 @@ public class ExpenseController {
 
     // Get total expenses per category for a user
     @GetMapping("/category-total/bar-graph")
-    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategoryBar() {
+    public ResponseEntity<String> getExpensesByCategoryBar() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
         BarGraphTotal barGraphTotal = new BarGraphTotal();
-        SwingUtilities.invokeLater(() -> barGraphTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/BarGraphTotal.png"));
-        return ResponseEntity.ok(expenses);
+        String image = barGraphTotal.saveChartAsImage(expenses);
+        return ResponseEntity.ok(image);
     }
 
     @GetMapping("/category-total/pie-chart")
-    public ResponseEntity<List<CategoryExpenseDTO>> getExpensesByCategoryPie() {
+    public ResponseEntity<String> getExpensesByCategoryPie() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         List<CategoryExpenseDTO> expenses = expenseServices.getTotalExpensesByCategory(userId);
         PieChartTotal pieChartTotal = new PieChartTotal();
-        SwingUtilities.invokeLater(() -> pieChartTotal.saveChartAsImage(expenses, "src/main/java/com/example/demo/graphs/images/PieChartTotal.png"));
-        return ResponseEntity.ok(expenses);
+        String image = pieChartTotal.saveChartAsImage(expenses);
+        return ResponseEntity.ok(image);
     }
 }

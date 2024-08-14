@@ -8,7 +8,9 @@ public record SettlementDTO(
     Date settledDate,
     long groupId,
     long payerId,
-    long receiverId
+    String payerName,
+    long receiverId,
+    String receiverName
 ) {
     
 }

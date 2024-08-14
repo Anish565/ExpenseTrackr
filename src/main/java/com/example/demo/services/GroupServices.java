@@ -35,7 +35,8 @@ public class GroupServices {
                 group.getId(),
                 group.getName(),
                 group.getDate(),
-                group.getAdmin().getId()
+                group.getAdmin().getId(),
+                group.getAdmin().getUsername()
             )
         ).toList();
         return groups;
@@ -48,7 +49,8 @@ public class GroupServices {
                 group.getId(),
                 group.getName(),
                 group.getDate(),
-                group.getAdmin().getId()
+                group.getAdmin().getId(),
+                group.getAdmin().getUsername()
             )
         ).toList();
         return groups;
@@ -61,7 +63,8 @@ public class GroupServices {
                 group1.getId(),
                 group1.getName(),
                 group1.getDate(),
-                group1.getAdmin().getId()
+                group1.getAdmin().getId(),
+                group1.getAdmin().getUsername()
         ));
         return group;
     }
@@ -93,7 +96,8 @@ public class GroupServices {
                 group.getId(),
                 group.getName(),
                 group.getDate(),
-                group.getAdmin().getId()
+                group.getAdmin().getId(),
+                group.getAdmin().getUsername()
             )
         ).toList();
         return groups;
@@ -137,16 +141,18 @@ public class GroupServices {
     // get group splits
     public List<SplitDTO> getGroupSplits(Long groupId) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
-        List<SplitDTO> splits = group.getSplits().stream().map(
+        List<SplitDTO> splits = group.getSplits().stream().filter(split -> !split.getSettled()).map(
             
             split -> new SplitDTO(
                 split.getId(),
                 split.getAmount(),
                 split.getGroup().getId(),
                 split.getPayer().getId(),
+                split.getPayer().getUsername(),
                 split.getPayee().getId(),
+                split.getPayee().getUsername(),
                 split.getCategory().getName(),
-                split.isSettled(),
+                split.getSettled(),
                 ""
             )
         ).toList();
@@ -163,7 +169,9 @@ public class GroupServices {
                 settlement.getSettledDate(),
                 settlement.getGroup().getId(),
                 settlement.getPayer().getId(),
-                settlement.getReceiver().getId()
+                settlement.getPayer().getUsername(),
+                settlement.getReceiver().getId(),
+                settlement.getReceiver().getUsername()
             )
         ).toList();
         return settlements;

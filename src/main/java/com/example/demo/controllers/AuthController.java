@@ -51,7 +51,7 @@ public class AuthController {
     }
 
     // Login User
-    @GetMapping(path = "/login", produces = "application/json")
+    @PostMapping(path = "/login", produces = "application/json")
     public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginDTO loginDTO) {
         User authenticatedUser = authenticationService.authenticate(loginDTO);
         String token = jwtService.generateToken(authenticatedUser);

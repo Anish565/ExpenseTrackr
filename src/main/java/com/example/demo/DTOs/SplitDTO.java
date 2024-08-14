@@ -5,7 +5,9 @@ public record SplitDTO(
     Double amount,
     long groupId,
     long payerId,
+    String payerName,
     long payeeId,
+    String payeeName,
     String categoryName,
     Boolean settled,
     String status

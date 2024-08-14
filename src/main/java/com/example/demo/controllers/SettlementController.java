@@ -47,7 +47,7 @@ public class SettlementController {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = ((User) principal).getId();
         // only the payer and the receiver can initiate a settlement. 
-        if (settlement.payerId() != userId || settlement.receiverId() != userId) {
+        if (settlement.payerId() != userId && settlement.receiverId() != userId) {
             return ResponseEntity.status(401).build();
         }
         Optional<Split> split = splitServices.findSettlementByPayerIdAndPayeeId(settlement.receiverId(), settlement.payerId()); // (86, 0)
@@ -71,9 +71,12 @@ public class SettlementController {
                         savedSettlement.getSettledDate(),
                         savedSettlement.getGroup().getId(),
                         savedSettlement.getPayer().getId(),
-                        savedSettlement.getReceiver().getId()
+                        savedSettlement.getPayer().getUsername(),
+                        savedSettlement.getReceiver().getId(),
+                        savedSettlement.getReceiver().getUsername()
                     );
                     split.get().setSettled(true);
+                    splitServices.saveSplit(split.get());
                     return ResponseEntity.ok(settlementDTO);
                 } else {
                     return ResponseEntity.notFound().build();
@@ -105,7 +108,9 @@ public class SettlementController {
             settlement.get().getSettledDate(),
             settlement.get().getGroup().getId(),
             settlement.get().getPayer().getId(),
-            settlement.get().getReceiver().getId()
+            settlement.get().getPayer().getUsername(),
+            settlement.get().getReceiver().getId(),
+            settlement.get().getReceiver().getUsername()
         );
         return ResponseEntity.ok(settlementDTO);
     }

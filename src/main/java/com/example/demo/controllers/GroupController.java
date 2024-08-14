@@ -63,7 +63,7 @@ public class GroupController {
         newGroup.setAdmin(user);
         newGroup.setUsers(userList);
         groupServices.saveGroup(newGroup);
-        GroupDTO newGroupDTO = new GroupDTO(newGroup.getId(), newGroup.getName(), newGroup.getDate(), newGroup.getAdmin().getId());
+        GroupDTO newGroupDTO = new GroupDTO(newGroup.getId(), newGroup.getName(), newGroup.getDate(), newGroup.getAdmin().getId(), newGroup.getAdmin().getUsername());
         return ResponseEntity.ok(newGroupDTO);
     
     }
@@ -94,7 +94,7 @@ public class GroupController {
         if (updatedGroup.getAdmin().getId() != userId) {
             return ResponseEntity.status(401).build();
         }
-        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId());
+        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId(), updatedGroup.getAdmin().getUsername());
         return ResponseEntity.ok(groupDTO);
     }
 
@@ -110,13 +110,10 @@ public class GroupController {
     }
 
     // get user groups
-    @GetMapping("/{userId}/groups")
-    public ResponseEntity<List<GroupDTO>> getUserGroups(@PathVariable Long userId) {
+    @GetMapping("/me")
+    public ResponseEntity<List<GroupDTO>> getUserGroups() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long adminId = ((User) principal).getId();
-        if (userRepository.findById(userId).get().getId() != adminId) {
-            return ResponseEntity.status(401).build();
-        }
+        Long userId = ((User) principal).getId();
         List<GroupDTO> groups = groupServices.getUserGroups(userId);
         return ResponseEntity.ok(groups);
     }
@@ -134,7 +131,7 @@ public class GroupController {
             return ResponseEntity.status(401).build();
         }
         Group newUser = groupServices.addUserToGroup(groupId, userId);
-        GroupDTO newGroupDTO = new GroupDTO(newUser.getId(), newUser.getName(), newUser.getDate(), newUser.getAdmin().getId());
+        GroupDTO newGroupDTO = new GroupDTO(newUser.getId(), newUser.getName(), newUser.getDate(), newUser.getAdmin().getId(), newUser.getAdmin().getUsername());
         return ResponseEntity.ok(newGroupDTO);
 
     }
@@ -147,8 +144,11 @@ public class GroupController {
         if (groupRepository.findById(groupId).get().getAdmin().getId() != adminId) {
             return ResponseEntity.status(401).build();
         }
+        if (adminId == userId) {
+            return ResponseEntity.status(400).build();
+        }
         Group updatedGroup = groupServices.removeUserFromGroup(groupId, userId);
-        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId());
+        GroupDTO groupDTO = new GroupDTO(updatedGroup.getId(), updatedGroup.getName(), updatedGroup.getDate(), updatedGroup.getAdmin().getId(), updatedGroup.getAdmin().getUsername());
         return ResponseEntity.ok(groupDTO);
     }
 
