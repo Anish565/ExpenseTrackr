@@ -1,4 +1,4 @@
-# Project Name
+# ExpenseTrackr
 
 ## Installation and Dependencies
 
